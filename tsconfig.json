@@ -1,0 +1,19 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/shared" },
+    { "path": "packages/ai" },
+    { "path": "packages/config" },
+    { "path": "packages/core" },
+    { "path": "packages/db" },
+    { "path": "packages/policy" },
+    { "path": "packages/resources" },
+    { "path": "packages/schemas" },
+    { "path": "packages/whatsapp" },
+    { "path": "apps/api" },
+    { "path": "apps/dashboard" },
+    { "path": "apps/llm-proxy" },
+    { "path": "apps/worker" },
+    { "path": "apps/storage-guard" }
+  ]
+}

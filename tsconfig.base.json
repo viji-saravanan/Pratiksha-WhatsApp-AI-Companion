@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "declaration": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@viji/ai": ["packages/ai/src/index.ts"],
+      "@viji/api": ["apps/api/src/index.ts"],
+      "@viji/config": ["packages/config/src/index.ts"],
+      "@viji/core": ["packages/core/src/index.ts"],
+      "@viji/dashboard": ["apps/dashboard/src/index.ts"],
+      "@viji/db": ["packages/db/src/index.ts"],
+      "@viji/llm-proxy": ["apps/llm-proxy/src/index.ts"],
+      "@viji/policy": ["packages/policy/src/index.ts"],
+      "@viji/resources": ["packages/resources/src/index.ts"],
+      "@viji/schemas": ["packages/schemas/src/index.ts"],
+      "@viji/shared": ["packages/shared/src/index.ts"],
+      "@viji/worker": ["apps/worker/src/index.ts"],
+      "@viji/whatsapp": ["packages/whatsapp/src/index.ts"]
+    },
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  }
+}

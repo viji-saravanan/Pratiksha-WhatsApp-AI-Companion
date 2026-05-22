@@ -1,0 +1,34 @@
+{
+  "name": "pratiksha-whatsapp-ai-companion",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first WhatsApp AI companion with a visual dashboard, resource vault, Postgres memory, and local LLM support.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@9.15.4",
+  "scripts": {
+    "bootstrap:data": "node scripts/bootstrap-ssd-root.mjs",
+    "check:storage": "node scripts/check-storage-profile.mjs",
+    "migrate": "node scripts/run-migrations.mjs",
+    "seed:dev": "node scripts/seed-dev-data.mjs",
+    "api:start": "node apps/api/dist/server.js",
+    "dashboard:start": "node apps/dashboard/dist/server.js",
+    "llm-proxy:start": "node apps/llm-proxy/dist/server.js",
+    "ai:smoke": "node scripts/test-ollama-draft.mjs",
+    "backup:run": "node scripts/backup-postgres.mjs",
+    "restore:check": "node scripts/restore-check-postgres.mjs",
+    "retention:plan": "node scripts/retention-sweep.mjs --json",
+    "retention:apply": "node scripts/retention-sweep.mjs --apply",
+    "stack:dashboard:up": "docker compose --profile dashboard up -d --build",
+    "stack:app:up": "docker compose --profile app up -d --build",
+    "stack:down": "docker compose --profile dashboard --profile app --profile ai --profile db down --remove-orphans",
+    "dashboard:build": "corepack pnpm --filter @viji/dashboard build",
+    "test": "node --test tests/**/*.test.mjs",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "@types/pg": "^8.20.0",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,0 +1,16 @@
+data_root: "/data/pratiksha"
+sentinel_file: ".viji-helper-root"
+active_profile: "large-200gb"
+profiles:
+  large-200gb:
+    quota_limit_bytes: 214748364800
+    warning_used_bytes: 177167400960
+    critical_used_bytes: 198642237440
+    warning_free_bytes: 26843545600
+    critical_free_bytes: 12884901888
+  small-100gb:
+    quota_limit_bytes: 107374182400
+    warning_used_bytes: 85899345920
+    critical_used_bytes: 96636764160
+    warning_free_bytes: 16106127360
+    critical_free_bytes: 8589934592

@@ -1,0 +1,19 @@
+{
+  "name": "@viji/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@viji/config": "workspace:*",
+    "@viji/core": "workspace:*",
+    "@viji/db": "workspace:*",
+    "@viji/resources": "workspace:*",
+    "@viji/shared": "workspace:*",
+    "@viji/worker": "workspace:*"
+  }
+}

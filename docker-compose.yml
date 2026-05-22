@@ -1,0 +1,111 @@
+name: pratiksha
+
+x-pratiksha-env: &pratiksha-env
+  VIJI_DATA_ROOT: ${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}
+  VIJI_STORAGE_PROFILE: ${VIJI_STORAGE_PROFILE:-large-200gb}
+  VIJI_SENTINEL_FILE: ${VIJI_SENTINEL_FILE:-.pratiksha-root}
+  VIJI_RESOURCE_ROOT: ${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}
+  VIJI_ASSISTANT_NAME: ${VIJI_ASSISTANT_NAME:-Pratiksha}
+  VIJI_ASSISTANT_REPLY_PREFIX: ${VIJI_ASSISTANT_REPLY_PREFIX:-[Pratiksha]}
+
+services:
+  storage-guard:
+    build:
+      context: .
+      dockerfile: infra/docker/storage-guard.Dockerfile
+    environment:
+      <<: *pratiksha-env
+    volumes:
+      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}:${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}"
+    restart: "no"
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    profiles: ["db", "app", "dashboard"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-pratiksha}
+      POSTGRES_USER: ${POSTGRES_USER:-pratiksha}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres-password}
+    volumes:
+      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}/postgres:/var/lib/postgresql/data"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pratiksha} -d ${POSTGRES_DB:-pratiksha}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  llm-proxy:
+    build:
+      context: .
+      dockerfile: infra/docker/llm-proxy.Dockerfile
+    profiles: ["ai", "app", "dashboard"]
+    environment:
+      VIJI_LLM_PROXY_HOST: "0.0.0.0"
+      VIJI_LLM_PROXY_PORT: ${VIJI_LLM_PROXY_PORT:-8791}
+      VIJI_LLM_PROXY_TOKEN: ${VIJI_LLM_PROXY_TOKEN:-change-me-llm-token}
+      VIJI_OLLAMA_BASE_URL: ${VIJI_OLLAMA_DOCKER_BASE_URL:-http://host.docker.internal:11434}
+      VIJI_OLLAMA_MODEL: ${VIJI_OLLAMA_MODEL:-qwen3:4b-instruct-2507-q4_K_M}
+      VIJI_OLLAMA_EMBEDDING_MODEL: ${VIJI_OLLAMA_EMBEDDING_MODEL:-mxbai-embed-large}
+      VIJI_OLLAMA_TIMEOUT_MS: ${VIJI_OLLAMA_TIMEOUT_MS:-120000}
+      VIJI_OLLAMA_TEMPERATURE: ${VIJI_OLLAMA_TEMPERATURE:-0.2}
+      VIJI_OLLAMA_NUM_PREDICT: ${VIJI_OLLAMA_NUM_PREDICT:-160}
+      VIJI_OLLAMA_CONTEXT_WINDOW_TOKENS: ${VIJI_OLLAMA_CONTEXT_WINDOW_TOKENS:-4096}
+    ports:
+      - "${VIJI_LLM_PROXY_PORT:-8791}:8791"
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+    profiles: ["app", "dashboard"]
+    environment:
+      <<: *pratiksha-env
+      VIJI_API_HOST: "0.0.0.0"
+      VIJI_API_PORT: ${VIJI_API_PORT:-8787}
+      VIJI_API_TOKEN: ${VIJI_API_TOKEN:-change-me-api-token}
+      DATABASE_URL: ${DATABASE_DOCKER_URL:-postgres://${POSTGRES_USER:-pratiksha}:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/${POSTGRES_DB:-pratiksha}}
+      VIJI_DEFAULT_REPLY_MODE: ${VIJI_DEFAULT_REPLY_MODE:-confirm_resource}
+      VIJI_AUTO_REPLY_ENABLED: ${VIJI_AUTO_REPLY_ENABLED:-false}
+      VIJI_LLM_PROVIDER: ${VIJI_LLM_PROVIDER:-ollama}
+      VIJI_OLLAMA_BASE_URL: ${VIJI_OLLAMA_DOCKER_BASE_URL:-http://host.docker.internal:11434}
+      VIJI_OLLAMA_MODEL: ${VIJI_OLLAMA_MODEL:-qwen3:4b-instruct-2507-q4_K_M}
+      VIJI_OLLAMA_EMBEDDING_MODEL: ${VIJI_OLLAMA_EMBEDDING_MODEL:-mxbai-embed-large}
+    ports:
+      - "${VIJI_API_PORT:-8787}:8787"
+    volumes:
+      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}:${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}"
+      - "${PRATIKSHA_HOST_RESOURCE_ROOT:-./viji-files}:${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: infra/docker/dashboard.Dockerfile
+    profiles: ["dashboard"]
+    environment:
+      VIJI_DASHBOARD_HOST: "0.0.0.0"
+      VIJI_DASHBOARD_PORT: ${VIJI_DASHBOARD_PORT:-8788}
+      VIJI_DASHBOARD_API_BASE_URL: ${VIJI_DASHBOARD_DOCKER_API_BASE_URL:-http://api:8787}
+      VIJI_API_TOKEN: ${VIJI_API_TOKEN:-change-me-api-token}
+      VIJI_CONTAINER_LOGS_ENABLED: ${VIJI_CONTAINER_LOGS_ENABLED:-true}
+      VIJI_DOCKER_SOCKET_PATH: ${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}
+      VIJI_DOCKER_COMPOSE_PROJECT: ${VIJI_DOCKER_COMPOSE_PROJECT:-pratiksha}
+      VIJI_CONTAINER_LOGS_TAIL: ${VIJI_CONTAINER_LOGS_TAIL:-120}
+      VIJI_CONTAINER_LOGS_TIMEOUT_MS: ${VIJI_CONTAINER_LOGS_TIMEOUT_MS:-5000}
+      VIJI_RESOURCE_ROOT: ${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}
+      VIJI_DASHBOARD_UPLOAD_MAX_BYTES: ${VIJI_DASHBOARD_UPLOAD_MAX_BYTES:-52428800}
+    ports:
+      - "${VIJI_DASHBOARD_PORT:-8788}:8788"
+    volumes:
+      - "${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}:${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}:ro"
+      - "${PRATIKSHA_HOST_RESOURCE_ROOT:-./viji-files}:${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}"
+    depends_on:
+      api:
+        condition: service_started
+    restart: unless-stopped

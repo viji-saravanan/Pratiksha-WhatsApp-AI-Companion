@@ -1,0 +1,8 @@
+data_root: "/data/pratiksha"
+storage_profile: "large-200gb"
+dashboard:
+  host: "127.0.0.1"
+  port: 5173
+api:
+  host: "127.0.0.1"
+  port: 8080

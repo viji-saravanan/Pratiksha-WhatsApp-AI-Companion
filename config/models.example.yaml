@@ -1,0 +1,14 @@
+runtime: "ollama"
+deployment: "host-service-with-ssd-models"
+models_root: "/data/pratiksha/models/ollama"
+primary_model:
+  name: "qwen3:4b-instruct-2507-q4_K_M"
+  family: "qwen3"
+  parameters: "4.0B"
+  quantization: "Q4_K_M"
+  size: "2.5GB"
+fallback_model:
+  name: "qwen3:1.7b"
+  quantization: "Q4"
+embedding_model:
+  name: "paraphrase-multilingual-MiniLM-L12-v2"

@@ -1,0 +1,14 @@
+.DS_Store
+.env
+node_modules/
+.pnpm-store/
+dist/
+*.tsbuildinfo
+coverage/
+.turbo/
+.cache/
+*.log
+.pratiksha-data/
+viji-files/
+models/
+backups/

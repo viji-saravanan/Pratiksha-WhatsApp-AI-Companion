@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2563eb" />
+    <title>Pratiksha Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="ambient-grid" aria-hidden="true"></div>
+    <div class="shell command-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">P</div>
+          <div>
+            <div class="brand-title">Pratiksha</div>
+            <div class="brand-subtitle">Private WhatsApp assistant</div>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Dashboard views">
+          <button class="nav-item active" data-view="home" data-icon="home"><span>Home</span></button>
+          <button class="nav-item" data-view="assistant" data-icon="bot"><span>Assistant</span></button>
+          <button class="nav-item" data-view="files" data-icon="folder"><span>Files</span></button>
+          <button class="nav-item" data-view="chats" data-icon="message"><span>Chats</span></button>
+          <button class="nav-item" data-view="sync" data-icon="sync"><span>Sync</span></button>
+          <button class="nav-item" data-view="settings" data-icon="settings"><span>Settings</span></button>
+          <button class="nav-item" data-view="logs" data-icon="terminal"><span>Logs</span></button>
+        </nav>
+        <div class="sidebar-footer">
+          <span>Plain-language status</span>
+          <strong id="sidebar-state">Starting</strong>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="topbar-copy">
+            <p class="eyebrow">Local control center</p>
+            <h1 id="view-title">Home</h1>
+            <p id="view-subtitle">Plain-language status for the assistant, files, WhatsApp, and storage.</p>
+          </div>
+          <div class="topbar-actions">
+            <span id="api-state" class="pill neutral">Loading</span>
+            <button id="theme-toggle" class="button">Dark mode</button>
+            <button id="refresh" class="button primary" data-icon="refresh">Refresh</button>
+          </div>
+        </header>
+
+        <section id="alert" class="alert hidden" aria-live="polite"></section>
+        <section id="quick-strip" class="quick-strip" aria-label="Live dashboard signals"></section>
+
+        <section id="view-home" class="view active"></section>
+        <section id="view-assistant" class="view"></section>
+        <section id="view-files" class="view"></section>
+        <section id="view-chats" class="view"></section>
+        <section id="view-sync" class="view"></section>
+        <section id="view-settings" class="view"></section>
+        <section id="view-logs" class="view"></section>
+      </main>
+    </div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,15 @@
+.git
+.env
+.DS_Store
+node_modules
+.pnpm-store
+dist
+*.tsbuildinfo
+.pratiksha-data
+viji-files
+models
+backups
+coverage
+.turbo
+.cache
+*.log

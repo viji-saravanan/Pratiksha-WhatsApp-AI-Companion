@@ -1,0 +1,11 @@
+default_reply_mode: "approval"
+auto_reply_enabled: false
+assistant_name: "Pratiksha"
+reply_prefix: "[Pratiksha]"
+allow_file_sharing: false
+allowed_contacts:
+  - display_name: "Primary Recipient"
+    channel: "whatsapp_personal"
+  - display_name: "Test Sender"
+    channel: "whatsapp_personal"
+    purpose: "local_test_only"
