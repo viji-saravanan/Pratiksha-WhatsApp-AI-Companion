@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "store_dir": "/data/pratiksha/wacli/store",
+    "authenticated": false,
+    "connected": false
+  },
+  "error": null
+}

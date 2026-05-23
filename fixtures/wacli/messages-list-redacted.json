@@ -1,0 +1,40 @@
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": "wamid.redacted.vijayalakshmi.0001",
+        "chat_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_name": "Primary Recipient",
+        "chat_name": "Primary Recipient",
+        "from_me": false,
+        "message_type": "text",
+        "text": "Synthetic redacted recipient request for Phase 3 ingestion.",
+        "timestamp": "2026-05-01T10:00:00.000Z"
+      },
+      {
+        "id": "wamid.redacted.unknown.0001",
+        "chat_jid": "unknown.contact.redacted@s.whatsapp.net",
+        "sender_jid": "unknown.contact.redacted@s.whatsapp.net",
+        "sender_name": "Unknown Redacted Contact",
+        "chat_name": "Unknown Redacted Contact",
+        "from_me": false,
+        "message_type": "text",
+        "text": "Synthetic redacted unknown-contact request that must be ignored.",
+        "timestamp": "2026-05-01T10:01:00.000Z"
+      },
+      {
+        "id": "wamid.redacted.group.0001",
+        "chat_jid": "redacted.family.group@g.us",
+        "sender_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_name": "Primary Recipient",
+        "chat_name": "Redacted Family Group",
+        "from_me": false,
+        "message_type": "text",
+        "text": "Synthetic redacted group request that must be ignored.",
+        "timestamp": "2026-05-01T10:02:00.000Z"
+      }
+    ]
+  }
+}

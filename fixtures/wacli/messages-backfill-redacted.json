@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": "wamid.redacted.vijayalakshmi.backfill.0001",
+        "chat_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_name": "Primary Recipient",
+        "chat_name": "Primary Recipient",
+        "from_me": false,
+        "message_type": "text",
+        "text": "Synthetic redacted older backfill message.",
+        "timestamp": "2026-05-01T09:55:00.000Z"
+      }
+    ]
+  },
+  "error": null
+}

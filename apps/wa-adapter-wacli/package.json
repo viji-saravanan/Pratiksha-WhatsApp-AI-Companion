@@ -1,0 +1,24 @@
+{
+  "name": "@viji/wa-adapter-wacli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/main.js",
+  "types": "dist/main.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "doctor:smoke": "node dist/main.js doctor-smoke",
+    "read:smoke": "node dist/main.js read-smoke",
+    "recovery:smoke": "node dist/main.js recovery-smoke",
+    "send:smoke": "node dist/main.js send-text-smoke",
+    "auth:status": "node dist/main.js auth-status",
+    "auth:login": "node dist/main.js auth-login"
+  },
+  "dependencies": {
+    "@viji/config": "workspace:*",
+    "@viji/db": "workspace:*",
+    "@viji/shared": "workspace:*",
+    "@viji/worker": "workspace:*",
+    "@viji/whatsapp": "workspace:*"
+  }
+}

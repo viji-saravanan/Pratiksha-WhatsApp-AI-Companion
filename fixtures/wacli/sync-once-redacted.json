@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "state": "completed",
+    "messages_seen": 3,
+    "messages_imported": 1
+  },
+  "error": null
+}

@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "data": {
+    "message_id": "wamid.redacted.vijayalakshmi.media.0001",
+    "chat_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+    "output_path": "/data/pratiksha/wacli/media/redacted-document.pdf",
+    "mime_type": "application/pdf",
+    "size_bytes": 12345
+  },
+  "error": null
+}
