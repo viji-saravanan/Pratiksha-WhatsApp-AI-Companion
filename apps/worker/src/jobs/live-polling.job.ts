@@ -103,20 +103,29 @@ async function pollAllowlistedContact(
     messageLimit: number;
   }
 ): Promise<LiveAllowlistContactPollResult> {
-  const query = contactSearchQuery(input.contact);
-  if (!query) {
+  const queries = contactSearchQueries(input.contact);
+  if (queries.length === 0) {
     return skipped(input.contact, "no_query");
   }
 
-  const chatsResult = await input.adapter.listChats({
-    query,
-    limit: input.chatSearchLimit
-  });
-  if (!chatsResult.ok) {
-    return failed(input.contact, chatsResult.code);
-  }
+  let selectedChat: PollableChatRecord | null = null;
+  for (const query of queries) {
+    const chatsResult = await input.adapter.listChats({
+      query,
+      limit: input.chatSearchLimit
+    });
+    if (!chatsResult.ok) {
+      return failed(input.contact, chatsResult.code);
+    }
 
-  const selectedChat = selectMatchingChat(asPollableChats(chatsResult.value), input.contact);
+    selectedChat = selectMatchingChat(
+      asPollableChats(chatsResult.value),
+      input.contact
+    );
+    if (selectedChat) {
+      break;
+    }
+  }
   if (!selectedChat) {
     return skipped(input.contact, "no_matching_chat");
   }
@@ -195,8 +204,12 @@ async function pollAllowlistedContact(
   }
 }
 
-function contactSearchQuery(contact: ContactRecord): string | null {
-  return contact.waJid ?? contact.phoneE164 ?? contact.displayName ?? null;
+function contactSearchQueries(contact: ContactRecord): string[] {
+  return uniqueStrings([
+    contact.phoneE164,
+    contact.waJid,
+    contact.displayName
+  ]);
 }
 
 function selectMatchingChat(
@@ -235,6 +248,20 @@ function asPollableChats(value: unknown): PollableChatRecord[] {
   }
 
   return value.filter(isPollableChat);
+}
+
+function uniqueStrings(values: readonly (string | null | undefined)[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    const trimmed = value?.trim();
+    if (!trimmed || seen.has(trimmed)) {
+      continue;
+    }
+    seen.add(trimmed);
+    result.push(trimmed);
+  }
+  return result;
 }
 
 function isPollableChat(value: unknown): value is PollableChatRecord {
