@@ -1,4 +1,18 @@
-# Pratiksha - WhatsApp AI Companion
+<h1 align="center">Pratiksha - WhatsApp AI Companion</h1>
+<p align="center">Local-first WhatsApp AI companion with Docker, Postgres memory, resource matching, local LLMs, and a visual control room.</p>
+<p align="center">
+  <a href="#what-it-does">Features</a> |
+  <a href="#run-and-stop">Run and stop</a> |
+  <a href="#architecture">Architecture</a> |
+  <a href="#creators">Creators</a>
+</p>
+<p align="center">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white">
+  <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white">
+  <img alt="Postgres" src="https://img.shields.io/badge/Postgres%20%2B%20pgvector-4169E1?logo=postgresql&logoColor=white">
+  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-local%20LLM-111827">
+  <img alt="Dashboard" src="https://img.shields.io/badge/Dashboard-dark%20mode-2563EB">
+</p>
 
 Pratiksha is a local-first WhatsApp companion designed for private, SSD-backed automation. It keeps the durable system of record in Postgres, uses local LLMs through Ollama, indexes a file repository for resource suggestions, and gives the owner a polished dashboard for control, logs, and operational visibility.
 
@@ -12,6 +26,14 @@ Pratiksha is a local-first WhatsApp companion designed for private, SSD-backed a
 - Blocks file sends until the trusted WhatsApp recipient confirms from WhatsApp.
 - Shows categorized logs plus raw container logs from the dashboard.
 - Supports dark mode, mobile views, upload controls, storage status, and health checks.
+
+## How It Was Made
+
+- TypeScript monorepo with shared packages for config, policy, AI, resources, database access, logging, metrics, and WhatsApp adapter contracts.
+- Docker Compose owns the runtime lifecycle, so start and stop are single-command operations.
+- Postgres plus pgvector is the canonical state store for messages, resources, drafts, jobs, policy, health, and audit events.
+- Ollama stays behind an internal LLM proxy so model settings, timeouts, and response parsing are centralized.
+- The dashboard is intentionally plain-language first: owner controls are separated from logs, and file-send confirmation remains recipient-side.
 
 ## Screenshots
 
@@ -107,3 +129,29 @@ docker compose --profile dashboard config
 ```
 
 Some integration tests require Docker to be running because they spin up disposable Postgres containers.
+
+## Sensitive/Local-Only Files
+
+These files and directories should stay local and are ignored by git:
+
+- `.env`
+- `.pratiksha-data/`
+- `viji-files/`
+- local model files
+- Postgres runtime data
+- WhatsApp adapter auth/cache stores
+- backups, logs, and generated build output
+
+## Creators
+
+### Vijaya Lakshmi D S
+[![GitHub](https://img.shields.io/badge/GitHub-@viji--saravanan-181717?logo=github&logoColor=white)](https://github.com/viji-saravanan)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-vijaya--lakshmi--saravanan-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/vijaya-lakshmi-saravanan-305972298/)
+
+### Arya Subramani S
+[![GitHub](https://img.shields.io/badge/GitHub-@callmearya-181717?logo=github&logoColor=white)](https://github.com/callmearya)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-arya--subramani-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/arya-subramani/)
+
+## Contributing
+
+Issues and PRs are welcome. For changes touching WhatsApp live automation, file-send policy, storage behavior, or local model execution, open a PR with the checks you ran and call out any live-account behavior explicitly.
