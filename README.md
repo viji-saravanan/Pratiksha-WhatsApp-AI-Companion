@@ -65,6 +65,8 @@ Live WhatsApp branch startup:
 corepack pnpm stack:live:up
 ```
 
+That live command first stops stale Compose services, runs a WhatsApp store preflight, then starts the dashboard, API, Postgres, LLM proxy, storage guard, and live worker. The preflight preserves `session.db`, backs up any malformed disposable `wacli.db` cache into the configured backup folder, and warms a missing or empty cache with a bounded `wacli sync --once` before the worker starts.
+
 Dashboard: [http://localhost:8788](http://localhost:8788)
 API: [http://localhost:8787](http://localhost:8787)
 LLM proxy: [http://localhost:8791](http://localhost:8791)
@@ -113,6 +115,7 @@ See [Live WhatsApp Adapter](docs/LIVE_WHATSAPP_ADAPTER.md) for the adapter branc
 - No `.env`, runtime data, adapter auth stores, database files, logs, model blobs, or uploaded files should be committed.
 - File sends require recipient-side WhatsApp confirmation; owner dashboard approval is not treated as authority.
 - Postgres is the canonical state store. Adapter cache files are operational inputs only.
+- WhatsApp auth state is preserved across restarts. Disposable adapter cache corruption is handled before startup instead of requiring manual cleanup.
 - Storage usage is tracked against the configured Pratiksha data root, with filesystem free space treated as a separate safety signal.
 
 ## Repository Map

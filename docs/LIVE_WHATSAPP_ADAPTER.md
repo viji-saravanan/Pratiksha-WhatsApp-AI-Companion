@@ -41,6 +41,8 @@ Start the live stack:
 corepack pnpm stack:live:up
 ```
 
+`stack:live:up` stops stale Compose services, runs `wa:store:preflight`, and only then starts the live stack. The preflight checks `session.db`, backs up malformed disposable `wacli.db` cache files, warms missing or empty cache state with a bounded sync, and can optionally require configured chat queries before startup.
+
 Stop everything:
 
 ```bash
@@ -53,3 +55,4 @@ corepack pnpm stack:down
 - Keep `VIJI_WACLI_LIVE_SEND_ENABLED=false` until the account is authenticated and live smoke checks pass.
 - File sends remain recipient-confirmed; dashboard/API owner confirmation must not release a file.
 - Polling and reconnect behavior should degrade to idle/no-reply if the data root, sentinel, network, or adapter session is unavailable.
+- Treat `session.db` as durable auth state and `wacli.db` as rebuildable cache. Preflight must never delete or overwrite a malformed session file automatically.
