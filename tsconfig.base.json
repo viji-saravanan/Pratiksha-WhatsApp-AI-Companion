@@ -10,6 +10,7 @@
     "paths": {
       "@viji/ai": ["packages/ai/src/index.ts"],
       "@viji/api": ["apps/api/src/index.ts"],
+      "@viji/cli": ["apps/cli/src/index.ts"],
       "@viji/config": ["packages/config/src/index.ts"],
       "@viji/core": ["packages/core/src/index.ts"],
       "@viji/dashboard": ["apps/dashboard/src/index.ts"],
@@ -19,6 +20,7 @@
       "@viji/resources": ["packages/resources/src/index.ts"],
       "@viji/schemas": ["packages/schemas/src/index.ts"],
       "@viji/shared": ["packages/shared/src/index.ts"],
+      "@viji/wa-adapter-wacli": ["apps/wa-adapter-wacli/src/index.ts"],
       "@viji/worker": ["apps/worker/src/index.ts"],
       "@viji/whatsapp": ["packages/whatsapp/src/index.ts"]
     },

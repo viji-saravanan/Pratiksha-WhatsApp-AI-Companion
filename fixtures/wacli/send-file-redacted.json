@@ -1,0 +1,9 @@
+{
+  "success": true,
+  "data": {
+    "message_id": "wamid.redacted.outbound.file.0001",
+    "chat_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+    "sent_at": "2026-05-01T10:05:00.000Z"
+  },
+  "error": null
+}

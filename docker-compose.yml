@@ -21,7 +21,7 @@ services:
 
   postgres:
     image: pgvector/pgvector:pg16
-    profiles: ["db", "app", "dashboard"]
+    profiles: ["db", "app", "dashboard", "live"]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-pratiksha}
       POSTGRES_USER: ${POSTGRES_USER:-pratiksha}
@@ -75,6 +75,51 @@ services:
       VIJI_OLLAMA_EMBEDDING_MODEL: ${VIJI_OLLAMA_EMBEDDING_MODEL:-mxbai-embed-large}
     ports:
       - "${VIJI_API_PORT:-8787}:8787"
+    volumes:
+      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}:${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}"
+      - "${PRATIKSHA_HOST_RESOURCE_ROOT:-./viji-files}:${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  live-worker:
+    build:
+      context: .
+      dockerfile: infra/docker/live-worker.Dockerfile
+    profiles: ["live"]
+    environment:
+      <<: *pratiksha-env
+      DATABASE_URL: ${DATABASE_DOCKER_URL:-postgres://${POSTGRES_USER:-pratiksha}:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/${POSTGRES_DB:-pratiksha}}
+      VIJI_AUTO_REPLY_ENABLED: ${VIJI_AUTO_REPLY_ENABLED:-false}
+      VIJI_DEFAULT_REPLY_MODE: ${VIJI_DEFAULT_REPLY_MODE:-confirm_resource}
+      VIJI_DEFAULT_CHANNEL_ACCOUNT_ID: ${VIJI_DEFAULT_CHANNEL_ACCOUNT_ID:-00000000-0000-4000-8000-000000000003}
+      VIJI_WACLI_BIN: "/usr/local/bin/wacli"
+      VIJI_WACLI_STORE: ${VIJI_WACLI_STORE:-/data/pratiksha/wacli/store}
+      VIJI_WACLI_MEDIA_ROOT: ${VIJI_WACLI_MEDIA_ROOT:-/data/pratiksha/wacli/media}
+      VIJI_WACLI_TIMEOUT: ${VIJI_WACLI_TIMEOUT:-30s}
+      VIJI_WACLI_MARK_READ_BIN: ${VIJI_WACLI_MARK_READ_BIN:-/usr/local/bin/wacli-mark-read}
+      VIJI_WACLI_MARK_READ_ENABLED: ${VIJI_WACLI_MARK_READ_ENABLED:-true}
+      VIJI_WACLI_MARK_READ_TIMEOUT: ${VIJI_WACLI_MARK_READ_TIMEOUT:-5s}
+      VIJI_WACLI_LIVE_SEND_ENABLED: ${VIJI_WACLI_LIVE_SEND_ENABLED:-false}
+      VIJI_LIVE_INGEST_CONTACT_LIMIT: ${VIJI_LIVE_INGEST_CONTACT_LIMIT:-100}
+      VIJI_LIVE_INGEST_CHAT_SEARCH_LIMIT: ${VIJI_LIVE_INGEST_CHAT_SEARCH_LIMIT:-5}
+      VIJI_LIVE_INGEST_MESSAGE_LIMIT: ${VIJI_LIVE_INGEST_MESSAGE_LIMIT:-25}
+      VIJI_LIVE_POLL_INTERVAL_MS: ${VIJI_LIVE_POLL_INTERVAL_MS:-3000}
+      VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED: ${VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED:-true}
+      VIJI_LIVE_SYNC_IDLE_EXIT: ${VIJI_LIVE_SYNC_IDLE_EXIT:-12s}
+      VIJI_LIVE_SYNC_REFRESH_CONTACTS: ${VIJI_LIVE_SYNC_REFRESH_CONTACTS:-false}
+      VIJI_LIVE_SYNC_REFRESH_GROUPS: ${VIJI_LIVE_SYNC_REFRESH_GROUPS:-false}
+      VIJI_LIVE_AUTOMATION_BATCH_LIMIT: ${VIJI_LIVE_AUTOMATION_BATCH_LIMIT:-10}
+      VIJI_LIVE_DISPATCH_LIMIT_PER_CYCLE: ${VIJI_LIVE_DISPATCH_LIMIT_PER_CYCLE:-5}
+      VIJI_LLM_PROVIDER: ${VIJI_LLM_PROVIDER:-ollama}
+      VIJI_OLLAMA_BASE_URL: ${VIJI_OLLAMA_DOCKER_BASE_URL:-http://host.docker.internal:11434}
+      VIJI_OLLAMA_MODEL: ${VIJI_OLLAMA_MODEL:-qwen3:4b-instruct-2507-q4_K_M}
+      VIJI_OLLAMA_EMBEDDING_MODEL: ${VIJI_OLLAMA_EMBEDDING_MODEL:-mxbai-embed-large}
+      VIJI_OLLAMA_TIMEOUT_MS: ${VIJI_OLLAMA_TIMEOUT_MS:-120000}
+      VIJI_OLLAMA_TEMPERATURE: ${VIJI_OLLAMA_TEMPERATURE:-0.2}
+      VIJI_OLLAMA_NUM_PREDICT: ${VIJI_OLLAMA_NUM_PREDICT:-160}
+      VIJI_OLLAMA_CONTEXT_WINDOW_TOKENS: ${VIJI_OLLAMA_CONTEXT_WINDOW_TOKENS:-4096}
     volumes:
       - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}:${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}"
       - "${PRATIKSHA_HOST_RESOURCE_ROOT:-./viji-files}:${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}"

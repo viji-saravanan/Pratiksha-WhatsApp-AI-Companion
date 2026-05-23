@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": "wamid.redacted.vijayalakshmi.media.1001",
+        "chat_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_name": "Primary Recipient",
+        "chat_name": "Primary Recipient",
+        "from_me": false,
+        "message_type": "image",
+        "caption": "Please keep this passport photo for later.",
+        "mime_type": "image/jpeg",
+        "file_name": "recipient_passport_photo.jpg",
+        "size_bytes": 21,
+        "timestamp": "2026-05-01T10:03:00.000Z"
+      },
+      {
+        "id": "wamid.redacted.unknown.media.1001",
+        "chat_jid": "unknown.contact.redacted@s.whatsapp.net",
+        "sender_jid": "unknown.contact.redacted@s.whatsapp.net",
+        "sender_name": "Unknown Redacted Contact",
+        "chat_name": "Unknown Redacted Contact",
+        "from_me": false,
+        "message_type": "document",
+        "caption": "Unknown document that must not be queued.",
+        "mime_type": "application/pdf",
+        "file_name": "unknown.pdf",
+        "size_bytes": 42,
+        "timestamp": "2026-05-01T10:04:00.000Z"
+      }
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "success": false,
+  "data": null,
+  "error": {
+    "message": "auth required: run wacli auth"
+  }
+}

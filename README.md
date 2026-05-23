@@ -59,6 +59,12 @@ Stop everything:
 corepack pnpm stack:down
 ```
 
+Live WhatsApp branch startup:
+
+```bash
+corepack pnpm stack:live:up
+```
+
 Dashboard: [http://localhost:8788](http://localhost:8788)
 API: [http://localhost:8787](http://localhost:8787)
 LLM proxy: [http://localhost:8791](http://localhost:8791)
@@ -100,6 +106,8 @@ flowchart LR
 
 The public main branch contains the dashboard, API, worker logic, resource matching, Postgres schema, local LLM proxy, and storage guard. Live WhatsApp adapter tooling is intentionally staged separately so it can be reviewed and merged with stricter operational checks.
 
+See [Live WhatsApp Adapter](docs/LIVE_WHATSAPP_ADAPTER.md) for the adapter branch runtime and guardrails.
+
 ## Safety Model
 
 - No `.env`, runtime data, adapter auth stores, database files, logs, model blobs, or uploaded files should be committed.
@@ -113,8 +121,10 @@ The public main branch contains the dashboard, API, worker logic, resource match
 apps/dashboard       Visual control room and upload UI
 apps/api             HTTP API, dashboard data, resource endpoints
 apps/worker          Draft, resource, policy, and outbound orchestration
+apps/wa-adapter-wacli Live personal WhatsApp adapter boundary
 apps/llm-proxy       Local Ollama proxy
 apps/storage-guard   Storage root and quota checks
+tools/wacli-mark-read Adapter-owned read-receipt helper
 packages/*           Shared TypeScript libraries
 migrations           Postgres schema and seed data
 docs                 ERD and screenshots

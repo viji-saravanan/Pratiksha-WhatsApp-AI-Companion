@@ -5,7 +5,7 @@ export function postgresSettings(env = process.env) {
   return {
     database: env.MIGRATION_POSTGRES_DB || env.POSTGRES_DB || "viji_helper",
     user: env.MIGRATION_POSTGRES_USER || env.POSTGRES_USER || "viji",
-    password: env.POSTGRES_PASSWORD || env.PGPASSWORD || "1234",
+    password: env.POSTGRES_PASSWORD || env.PGPASSWORD || "pratiksha_test_password",
     composeService: env.MIGRATION_COMPOSE_SERVICE || "postgres",
     dockerContainer: env.MIGRATION_DOCKER_CONTAINER || "",
     databaseUrl: env.DATABASE_URL || "",

@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": {
+    "store_dir": "/data/pratiksha/wacli/store",
+    "lock_held": false,
+    "lock_info": "",
+    "authenticated": true,
+    "connected": true,
+    "fts_enabled": true
+  },
+  "error": null
+}

@@ -451,7 +451,7 @@ Shareable resource records. These may point to manually managed files under `VIJ
 | `res_resource_id` | uuid pk |  |
 | `backing_res_file_asset_id` | uuid fk nullable | `res_file_assets.res_file_asset_id` |
 | `res_resource_registered_file_name` | text unique | Exact registered filename used in confirmation prompts |
-| `res_resource_title` | text | Human-friendly title, e.g. Viji resume |
+| `res_resource_title` | text | Human-friendly title, e.g. Recipient resume |
 | `res_resource_aliases` | text[] | Search aliases and alternate names |
 | `res_resource_description` | text nullable |  |
 | `res_resource_content_summary` | text nullable | Extracted/OCR/vision summary for matching; populated by later extractors |

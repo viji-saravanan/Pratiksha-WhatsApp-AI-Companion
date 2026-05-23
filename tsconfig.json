@@ -11,9 +11,11 @@
     { "path": "packages/schemas" },
     { "path": "packages/whatsapp" },
     { "path": "apps/api" },
+    { "path": "apps/cli" },
     { "path": "apps/dashboard" },
     { "path": "apps/llm-proxy" },
     { "path": "apps/worker" },
+    { "path": "apps/wa-adapter-wacli" },
     { "path": "apps/storage-guard" }
   ]
 }

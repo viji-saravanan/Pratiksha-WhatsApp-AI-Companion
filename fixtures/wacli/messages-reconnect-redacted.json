@@ -1,0 +1,30 @@
+{
+  "success": true,
+  "data": {
+    "messages": [
+      {
+        "id": "wamid.redacted.vijayalakshmi.reconnect.0002",
+        "chat_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_name": "Primary Recipient",
+        "chat_name": "Primary Recipient",
+        "from_me": false,
+        "message_type": "text",
+        "text": "Synthetic redacted reconnect message.",
+        "timestamp": "2026-05-01T10:05:00.000Z"
+      },
+      {
+        "id": "wamid.redacted.owner.reconnect.0003",
+        "chat_jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "sender_jid": "owner.redacted@s.whatsapp.net",
+        "sender_name": "Owner Redacted",
+        "chat_name": "Primary Recipient",
+        "from_me": true,
+        "message_type": "text",
+        "text": "Synthetic redacted owner reconnect reply.",
+        "timestamp": "2026-05-01T10:06:00.000Z"
+      }
+    ]
+  },
+  "error": null
+}

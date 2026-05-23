@@ -1,0 +1,20 @@
+{
+  "success": true,
+  "data": {
+    "chats": [
+      {
+        "jid": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "name": "Primary Recipient",
+        "type": "dm",
+        "last_message_at": "2026-05-01T10:00:00.000Z"
+      },
+      {
+        "jid": "redacted.family.group@g.us",
+        "name": "Redacted Family Group",
+        "type": "group",
+        "last_message_at": "2026-05-01T10:02:00.000Z"
+      }
+    ]
+  },
+  "error": null
+}

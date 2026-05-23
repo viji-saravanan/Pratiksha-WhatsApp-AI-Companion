@@ -1,0 +1,12 @@
+{
+  "success": true,
+  "data": [
+    {
+      "JID": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+      "Kind": "dm",
+      "Name": "Primary Recipient",
+      "LastMessageTS": "2026-05-01T10:05:00.000Z"
+    }
+  ],
+  "error": null
+}

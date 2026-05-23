@@ -1,0 +1,33 @@
+{
+  "success": true,
+  "data": {
+    "fts": false,
+    "messages": [
+      {
+        "ChatJID": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "ChatName": "Primary Recipient",
+        "MsgID": "wamid.redacted.vijayalakshmi.live.0001",
+        "SenderJID": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "Timestamp": "2026-05-01T10:05:00.000Z",
+        "FromMe": false,
+        "Text": "Synthetic redacted live-shape request.",
+        "DisplayText": "Synthetic redacted live-shape request.",
+        "MediaType": "text",
+        "Snippet": "Synthetic redacted snippet."
+      },
+      {
+        "ChatJID": "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
+        "ChatName": "Primary Recipient",
+        "MsgID": "wamid.redacted.owner.live.0002",
+        "SenderJID": "owner.redacted@s.whatsapp.net",
+        "Timestamp": "2026-05-01T10:06:00.000Z",
+        "FromMe": true,
+        "Text": "Synthetic redacted owner reply.",
+        "DisplayText": "Synthetic redacted owner reply.",
+        "MediaType": "text",
+        "Snippet": "Synthetic redacted reply snippet."
+      }
+    ]
+  },
+  "error": null
+}
