@@ -42,6 +42,13 @@ const excludedUsageNames = new Set([
   ".DS_Store"
 ]);
 const excludedUsageSuffixes = [".tsbuildinfo"];
+const statBlockBytes = 512;
+
+function allocatedBytes(fileStat) {
+  return typeof fileStat.blocks === "number" && fileStat.blocks >= 0
+    ? fileStat.blocks * statBlockBytes
+    : fileStat.size;
+}
 
 function getProfile(name) {
   if (name === "custom-env") {
@@ -66,11 +73,12 @@ async function getDirectoryUsageBytes(rootPath) {
     const currentStat = await lstat(currentPath);
 
     if (currentStat.isSymbolicLink()) {
-      total += currentStat.size;
+      total += allocatedBytes(currentStat);
       continue;
     }
 
     if (currentStat.isDirectory()) {
+      total += allocatedBytes(currentStat);
       const entries = await readdir(currentPath, { withFileTypes: true });
       for (const entry of entries) {
         if (
@@ -84,7 +92,7 @@ async function getDirectoryUsageBytes(rootPath) {
       continue;
     }
 
-    total += currentStat.size;
+    total += allocatedBytes(currentStat);
   }
 
   return total;

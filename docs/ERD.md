@@ -4,7 +4,7 @@
 
 This ERD supports a local-first personal WhatsApp AI assistant that starts with policy-gated trusted-contact text replies, then adds a smart resource catalog with recipient-confirmed file sending, allowlisted chat history recovery, media sync, monitoring, auditability, and safe idle-state behavior.
 
-The database is Postgres with pgvector. Large files, local model storage, adapter cache, media, logs, and backups live under the configured `VIJI_DATA_ROOT`. The default storage allocation profile is `large-200gb`.
+The database is Postgres with pgvector. Large files, models, WhatsApp stores, media, logs, and backups live under the configured Pratiksha data root. The default storage allocation is `large-200gb`.
 
 ## 2. Naming Policy
 
@@ -90,7 +90,7 @@ erDiagram
 | Field | Type | Notes |
 | --- | --- | --- |
 | `core_person_id` | uuid pk | Internal person identity |
-| `core_person_display_name` | text | Example: Primary Recipient |
+| `core_person_display_name` | text | Example: Vijayalakshmi Saravanan |
 | `core_person_notes` | text nullable | Optional private notes |
 | `core_person_created_at` | timestamptz |  |
 | `core_person_updated_at` | timestamptz |  |
@@ -182,7 +182,7 @@ Constraints:
 
 ### `msg_message_media`
 
-Media attached to normalized WhatsApp messages. For allowlisted received media, downloaded files should be linked to `res_file_assets`; media that Primary recipient may request again can later be promoted into `res_resources` without duplicating file bytes.
+Media attached to normalized WhatsApp messages. For allowlisted received media, downloaded files should be linked to `res_file_assets`; media that Vijayalakshmi may request again can later be promoted into `res_resources` without duplicating file bytes.
 
 | Field | Type | Notes |
 | --- | --- | --- |
@@ -451,7 +451,7 @@ Shareable resource records. These may point to manually managed files under `VIJ
 | `res_resource_id` | uuid pk |  |
 | `backing_res_file_asset_id` | uuid fk nullable | `res_file_assets.res_file_asset_id` |
 | `res_resource_registered_file_name` | text unique | Exact registered filename used in confirmation prompts |
-| `res_resource_title` | text | Human-friendly title, e.g. Recipient resume |
+| `res_resource_title` | text | Human-friendly title, e.g. Viji resume |
 | `res_resource_aliases` | text[] | Search aliases and alternate names |
 | `res_resource_description` | text nullable |  |
 | `res_resource_content_summary` | text nullable | Extracted/OCR/vision summary for matching; populated by later extractors |

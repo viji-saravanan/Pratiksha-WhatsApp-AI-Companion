@@ -17,6 +17,13 @@ const DEFAULT_EXCLUDED_NAMES = new Set([
   ".DS_Store"
 ]);
 const DEFAULT_EXCLUDED_SUFFIXES = [".tsbuildinfo"];
+const STAT_BLOCK_BYTES = 512;
+
+function allocatedBytes(stat: { blocks?: number; size: number }): number {
+  return typeof stat.blocks === "number" && stat.blocks >= 0
+    ? stat.blocks * STAT_BLOCK_BYTES
+    : stat.size;
+}
 
 export async function getDirectoryUsageBytes(
   rootPath: string,
@@ -36,11 +43,12 @@ export async function getDirectoryUsageBytes(
     const currentStat = await lstat(currentPath);
 
     if (currentStat.isSymbolicLink()) {
-      total += currentStat.size;
+      total += allocatedBytes(currentStat);
       continue;
     }
 
     if (currentStat.isDirectory()) {
+      total += allocatedBytes(currentStat);
       const entries = await readdir(currentPath, { withFileTypes: true });
       for (const entry of entries) {
         if (
@@ -54,7 +62,7 @@ export async function getDirectoryUsageBytes(
       continue;
     }
 
-    total += currentStat.size;
+    total += allocatedBytes(currentStat);
   }
 
   return total;

@@ -6,7 +6,9 @@ import { createPgPool } from "../packages/db/dist/index.js";
 import { createJsonLogger } from "../packages/shared/dist/index.js";
 import { createWacliClient } from "../apps/wa-adapter-wacli/dist/index.js";
 import {
+  createLiveSyncScheduler,
   createWacliOutboundDispatcher,
+  getLiveSyncSchedulerConfigFromEnv,
   runLiveAutomationCycle
 } from "../apps/worker/dist/index.js";
 import { resolveLiveWorkerStorageGate } from "./lib/live-worker-runtime.mjs";
@@ -32,10 +34,14 @@ const pool = createPgPool();
 const adapter = createWacliClient();
 const dispatcher = createWacliOutboundDispatcher(pool, adapter);
 const llmClient = createLlmClientFromEnv();
+const syncScheduler = createLiveSyncScheduler(
+  getLiveSyncSchedulerConfigFromEnv(process.env)
+);
 
 logger.info("live_worker.started", {
   channelAccountId: "[redacted-id]",
   pollIntervalMs,
+  syncScheduler: syncScheduler.snapshot(),
   autoReplyEnabled: process.env.VIJI_AUTO_REPLY_ENABLED === "true",
   liveSendEnabled: process.env.VIJI_WACLI_LIVE_SEND_ENABLED === "true"
 });
@@ -43,6 +49,8 @@ logger.info("live_worker.started", {
 try {
   while (!stopping) {
     const startedAt = Date.now();
+    let shouldSync = false;
+    let forceSyncEveryCycle = false;
     try {
       const storage = resolveLiveWorkerStorageGate(process.env);
       if (!storage.available) {
@@ -54,20 +62,45 @@ try {
         continue;
       }
 
-      await runLiveAutomationCycle(pool, {
+      const syncDecision = syncScheduler.decide();
+      forceSyncEveryCycle =
+        process.env.VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED === "true";
+      shouldSync = forceSyncEveryCycle || syncDecision.shouldSync;
+      const syncReason = forceSyncEveryCycle ? "forced" : syncDecision.reason;
+      const result = await runLiveAutomationCycle(pool, {
         channelAccountId,
         adapter,
         dispatcher,
         llmClient,
+        env: {
+          ...process.env,
+          VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED: shouldSync ? "true" : "false"
+        },
         logger,
         contactLimit: positiveInteger(process.env.VIJI_LIVE_INGEST_CONTACT_LIMIT, 100),
         chatSearchLimit: positiveInteger(
           process.env.VIJI_LIVE_INGEST_CHAT_SEARCH_LIMIT,
           5
         ),
-        messageLimit: positiveInteger(process.env.VIJI_LIVE_INGEST_MESSAGE_LIMIT, 25)
+        messageLimit: positiveInteger(process.env.VIJI_LIVE_INGEST_MESSAGE_LIMIT, 25),
+        syncReason
+      });
+      if (shouldSync && !forceSyncEveryCycle) {
+        syncScheduler.record(result.syncStatus);
+      }
+      logger.info("live_worker.cycle_timing", {
+        cycleDurationMs: result.cycleDurationMs,
+        syncDurationMs: result.syncDurationMs,
+        syncStatus: result.syncStatus,
+        syncReason: result.syncReason,
+        effectivePollIntervalMs: Date.now() - startedAt,
+        targetPollIntervalMs: pollIntervalMs,
+        syncScheduler: syncScheduler.snapshot()
       });
     } catch (error) {
+      if (shouldSync && !forceSyncEveryCycle) {
+        syncScheduler.record("failed");
+      }
       logger.error("live_worker.cycle_failed", error);
     }
 

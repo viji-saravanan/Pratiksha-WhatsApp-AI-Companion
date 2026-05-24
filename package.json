@@ -1,14 +1,15 @@
 {
-  "name": "pratiksha-whatsapp-ai-companion",
+  "name": "viji-helper",
   "version": "0.1.0",
   "private": true,
-  "description": "Local-first WhatsApp AI companion with a visual dashboard, resource vault, Postgres memory, and local LLM support.",
+  "description": "Local-first personal WhatsApp AI assistant.",
   "license": "MIT",
   "type": "module",
   "packageManager": "pnpm@9.15.4",
   "scripts": {
-    "bootstrap:data": "node scripts/bootstrap-ssd-root.mjs",
+    "bootstrap:ssd": "node scripts/bootstrap-ssd-root.mjs",
     "check:storage": "node scripts/check-storage-profile.mjs",
+    "check:storage:ssd": "node scripts/check-ssd-storage-profile.mjs",
     "migrate": "node scripts/run-migrations.mjs",
     "seed:dev": "node scripts/seed-dev-data.mjs",
     "api:start": "node apps/api/dist/server.js",
@@ -34,10 +35,12 @@
     "stack:dashboard:up": "docker compose --profile dashboard up -d --build",
     "stack:app:up": "docker compose --profile app up -d --build",
     "stack:live:up": "corepack pnpm stack:down && corepack pnpm wa:store:preflight && VIJI_AUTO_REPLY_ENABLED=true VIJI_WACLI_LIVE_SEND_ENABLED=true docker compose --profile dashboard --profile app --profile live up -d --build",
-    "stack:down": "docker compose --profile dashboard --profile app --profile live --profile ai --profile db down --remove-orphans",
+    "stack:down": "docker compose --profile dashboard --profile app --profile live --profile ai --profile db --profile observability down --remove-orphans",
     "dashboard:build": "corepack pnpm --filter @viji/dashboard build",
     "test": "node --test tests/**/*.test.mjs",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "skills:sync": "node scripts/generate-project-skills.mjs",
+    "skills:validate": "node scripts/validate-project-skills.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",

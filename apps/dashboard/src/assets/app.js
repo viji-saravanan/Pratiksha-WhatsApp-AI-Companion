@@ -5,7 +5,7 @@ const viewCopy = {
   ],
   assistant: [
     "Assistant",
-    "Control how the assistant responds and review file requests waiting on Primary Recipient."
+    "Control how the assistant responds and review file requests waiting on Vijayalakshmi."
   ],
   files: ["Files", "Index the local file repository and review what can be suggested."],
   chats: ["Chats", "See trusted WhatsApp chats and whether context is fresh."],
@@ -177,6 +177,20 @@ function formatBytes(value) {
   }
 
   return `${current.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
+}
+
+function formatDurationMs(value) {
+  const ms = Number(value ?? 0);
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return "unknown";
+  }
+  if (ms < 1000) {
+    return `${Math.round(ms)}ms`;
+  }
+  if (ms < 60_000) {
+    return `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0)}s`;
+  }
+  return `${(ms / 60_000).toFixed(ms < 600_000 ? 1 : 0)}m`;
 }
 
 function statusTone(value) {
@@ -528,7 +542,7 @@ function renderHome() {
   const storagePercent = getStoragePercent(data.storage);
   const attention = [
     state.apiFailures.length > 0 ? "Some dashboard data could not be loaded." : null,
-    pending > 0 ? `${pending} file request${pending === 1 ? "" : "s"} waiting for the trusted recipient in WhatsApp.` : null,
+    pending > 0 ? `${pending} file request${pending === 1 ? "" : "s"} waiting for Vijayalakshmi in WhatsApp.` : null,
     blocked > 0 ? `${blocked} blocked outbound item${blocked === 1 ? "" : "s"} need review.` : null,
     data.storage.state && data.storage.state !== "healthy" ? `Storage is ${data.storage.state}.` : null,
     data.status.database && data.status.database !== "healthy" ? "Database is not healthy." : null
@@ -542,7 +556,7 @@ function renderHome() {
         <div>
           <p class="eyebrow" style="color: rgba(248, 251, 255, 0.78);">${escapeHtml(assistantName)} command</p>
           <h2>${heroReady ? `${escapeHtml(assistantName)} is ready.` : "One clear control room for the assistant."}</h2>
-          <p>${heroReady ? "Text replies can run locally. File sends stay blocked until Primary Recipient confirms inside WhatsApp." : escapeHtml(attention[0] || "Review the live signals and finish the next action.")}</p>
+          <p>${heroReady ? "Text replies can run locally. File sends stay blocked until Vijayalakshmi confirms inside WhatsApp." : escapeHtml(attention[0] || "Review the live signals and finish the next action.")}</p>
         </div>
         <div class="hero-steps">
           ${pill("Local AI", "info")}
@@ -695,7 +709,7 @@ function renderAssistant() {
         </div>
         <div class="mode-grid">
           ${modeButton("auto", "Auto", "Send safe text replies without owner approval.", "zap")}
-          ${modeButton("confirm_resource", "Ask before files", "Suggest files, then wait for the trusted recipient in WhatsApp.", "shield")}
+          ${modeButton("confirm_resource", "Ask before files", "Suggest files, then wait for Vijayalakshmi in WhatsApp.", "shield")}
           ${modeButton("readonly", "Read-only", "Ingest and prepare context without sending replies.", "lock")}
           ${modeButton("paused", "Pause", "Stop assistant sends until you resume.", "clock", "danger")}
         </div>
@@ -748,7 +762,7 @@ function renderAssistant() {
                       <article class="confirmation-card">
                         <div class="resource-card-header">
                           <div>
-                            <div class="row-title">${escapeHtml(item.recipientDisplayName || item.conversationTitle || "Primary Recipient")}</div>
+                            <div class="row-title">${escapeHtml(item.recipientDisplayName || item.conversationTitle || "Vijayalakshmi")}</div>
                             <div class="row-subtitle">${escapeHtml(briefText(item.body || "Assistant asked for a confirmation."))}</div>
                           </div>
                           ${pill("Waiting in WhatsApp", "warn")}
@@ -1092,6 +1106,7 @@ function renderSettings() {
   const data = getDashboardData();
   const assistantName = getAssistantName(data);
   const currentMode = String(data.runtime.defaultReplyMode || "auto");
+  const liveSync = data.runtime.liveSync || data.status.live || {};
   const modeButton = (mode, title, detail, iconName, tone = "") => `
     <button class="mode-button ${currentMode === mode ? "active primary" : ""} ${tone}" data-mode="${escapeHtml(mode)}">
       <strong>${iconLabel(iconName, title)}</strong>
@@ -1133,10 +1148,11 @@ function renderSettings() {
           <div class="status-row with-icon"><div class="status-icon">${icon("bot")}</div><div><div class="row-title">Assistant identity</div><div class="row-subtitle">${escapeHtml(assistantName)} replies with ${escapeHtml(getAssistantReplyPrefix(data))}.</div></div>${pill("configured", "ok")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("zap")}</div><div><div class="row-title">Auto reply</div><div class="row-subtitle">Worker permission for automatic replies.</div></div>${pill(data.runtime.autoReplyEnabled ? "enabled" : "disabled")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("wifi")}</div><div><div class="row-title">Live sending</div><div class="row-subtitle">Whether real WhatsApp sends are enabled.</div></div>${pill(data.runtime.liveSendEnabled ? "enabled" : "disabled")}</div>
+          <div class="status-row with-icon"><div class="status-icon">${icon("sync")}</div><div><div class="row-title">Live sync cadence</div><div class="row-subtitle">Poll every ${escapeHtml(formatDurationMs(liveSync.pollIntervalMs))}; sync ${liveSync.syncBeforePollEnabled ? "before every poll" : `on startup and every ${formatDurationMs(liveSync.syncIntervalMs)}`}.</div></div>${pill(liveSync.syncSchedulerEnabled === false ? "sync off" : "scheduled", liveSync.syncBeforePollEnabled ? "warn" : "ok")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("database")}</div><div><div class="row-title">Local AI model</div><div class="row-subtitle">${escapeHtml(data.runtime.llmModel || "unknown")}</div></div>${pill(data.runtime.llmProvider || "ollama", "info")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("folder")}</div><div><div class="row-title">Media folder</div><div class="row-subtitle path">${escapeHtml(data.runtime.wacliMediaRoot || "unknown")}</div></div>${pill("configured", "neutral")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("hardDrive")}</div><div><div class="row-title">Resource folder</div><div class="row-subtitle path">${escapeHtml(data.runtime.resourceRoot || "unknown")}</div></div>${pill("SSD", "info")}</div>
-          <div class="status-row with-icon"><div class="status-icon">${icon("lock")}</div><div><div class="row-title">File send authority</div><div class="row-subtitle">Only the trusted recipient can confirm from WhatsApp.</div></div>${pill("locked", "warn")}</div>
+          <div class="status-row with-icon"><div class="status-icon">${icon("lock")}</div><div><div class="row-title">File send authority</div><div class="row-subtitle">Only Vijayalakshmi can confirm from WhatsApp.</div></div>${pill("locked", "warn")}</div>
         </div>
       </section>
       <section class="panel">

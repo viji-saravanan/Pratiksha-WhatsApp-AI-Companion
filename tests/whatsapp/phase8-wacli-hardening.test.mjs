@@ -88,9 +88,10 @@ function testConfig(overrides = {}) {
     bin: "wacli",
     storePath: "/data/pratiksha/wacli/store",
     timeout: "30s",
+    syncTimeout: "75s",
     liveSmokeEnabled: false,
     liveReadSmokeEnabled: false,
-    liveReadSmokeQuery: "Primary Recipient",
+    liveReadSmokeQuery: "Vijayalakshmi Saravanan",
     liveReadSmokeChatLimit: 5,
     liveReadSmokeMessageLimit: 5,
     markReadBin: "wacli-mark-read",
@@ -150,7 +151,7 @@ test("Phase 8 fixture parsers normalize wacli command outputs", () => {
   const messages = parseWacliMessages(fixture("messages-search-redacted.json"));
   assert.equal(messages.rejected.length, 0);
   assert.equal(messages.messages.length, 1);
-  assert.equal(messages.messages[0].senderDisplayName, "Primary Recipient");
+  assert.equal(messages.messages[0].senderDisplayName, "Vijayalakshmi Saravanan");
 
   const liveShapeMessages = parseWacliMessages(
     fixture("messages-list-live-shape-redacted.json")
@@ -413,17 +414,18 @@ test("typed wacli wrappers cover auth, sync, chat, message, and media commands",
     "--json",
     "--store"
   ]);
+  assert.deepEqual(syncOnce.calls[0].args.slice(-2), ["--timeout", "75s"]);
 
   const chats = createRunner(fixture("chats-list-redacted.json"));
   await createWacliClient(testConfig(), chats.runner).listChats({
-    query: "Primary Recipient",
+    query: "Vijayalakshmi",
     limit: 5
   });
   assert.deepEqual(chats.calls[0].args.slice(0, 6), [
     "chats",
     "list",
     "--query",
-    "Primary Recipient",
+    "Vijayalakshmi",
     "--limit",
     "5"
   ]);
@@ -503,7 +505,7 @@ test("live read smoke is opt-in and returns only redacted chat/message summary",
     {
       ...process.env,
       VIJI_WACLI_LIVE_READ_SMOKE_ENABLED: "true",
-      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Primary Recipient",
+      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Vijayalakshmi Saravanan",
       VIJI_WACLI_LIVE_READ_SMOKE_CHAT_LIMIT: "5",
       VIJI_WACLI_LIVE_READ_SMOKE_MESSAGE_LIMIT: "5"
     },
@@ -534,7 +536,7 @@ test("live read smoke is opt-in and returns only redacted chat/message summary",
     {
       ...process.env,
       VIJI_WACLI_LIVE_READ_SMOKE_ENABLED: "true",
-      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Primary Recipient"
+      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Vijayalakshmi Saravanan"
     },
     (config) => createWacliClient(config, malformed.runner)
   );
