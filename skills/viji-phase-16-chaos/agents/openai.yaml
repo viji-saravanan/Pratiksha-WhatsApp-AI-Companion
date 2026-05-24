@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 16 Chaos"
+  short_description: "Failure testing and no-unsafe-send proof"
+  default_prompt: "Use $viji-phase-16-chaos to test failure behavior."

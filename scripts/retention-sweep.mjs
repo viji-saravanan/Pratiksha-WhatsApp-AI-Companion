@@ -5,7 +5,7 @@ import { join } from "node:path";
 const args = new Set(process.argv.slice(2));
 const apply = args.has("--apply");
 const jsonOutput = args.has("--json");
-const dataRoot = process.env.VIJI_DATA_ROOT || "/data/pratiksha";
+const dataRoot = process.env.VIJI_DATA_ROOT || "/Volumes/Arya 1TB/VijiAI";
 const resourceRoot = process.env.VIJI_RESOURCE_ROOT || join(dataRoot, "viji-files");
 const backupDir = process.env.VIJI_PGBACKUP_DIR || join(dataRoot, "pgbackups");
 const keepBackups = Number(process.env.VIJI_BACKUP_KEEP_COUNT || 7);

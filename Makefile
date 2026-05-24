@@ -3,6 +3,9 @@
 check-storage:
 	node scripts/check-storage-profile.mjs
 
+check-storage-ssd:
+	node scripts/check-ssd-storage-profile.mjs
+
 test:
 	node --test tests/**/*.test.mjs
 

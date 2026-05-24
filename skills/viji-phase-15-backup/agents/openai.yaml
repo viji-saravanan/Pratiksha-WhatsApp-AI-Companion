@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 15 Backup"
+  short_description: "Backup restore and retention controls"
+  default_prompt: "Use $viji-phase-15-backup to implement recovery and retention."

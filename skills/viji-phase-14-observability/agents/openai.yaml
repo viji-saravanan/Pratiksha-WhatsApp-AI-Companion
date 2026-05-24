@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 14 Observability"
+  short_description: "Logs metrics and Grafana visibility"
+  default_prompt: "Use $viji-phase-14-observability to add logs and metrics."

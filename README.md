@@ -1,170 +1,183 @@
-<h1 align="center">Pratiksha - WhatsApp AI Companion</h1>
-<p align="center">Local-first WhatsApp AI companion with Docker, Postgres memory, resource matching, local LLMs, and a visual control room.</p>
-<p align="center">
-  <a href="#what-it-does">Features</a> |
-  <a href="#run-and-stop">Run and stop</a> |
-  <a href="#architecture">Architecture</a> |
-  <a href="#creators">Creators</a>
-</p>
-<p align="center">
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white">
-  <img alt="Docker" src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white">
-  <img alt="Postgres" src="https://img.shields.io/badge/Postgres%20%2B%20pgvector-4169E1?logo=postgresql&logoColor=white">
-  <img alt="Ollama" src="https://img.shields.io/badge/Ollama-local%20LLM-111827">
-  <img alt="Dashboard" src="https://img.shields.io/badge/Dashboard-dark%20mode-2563EB">
-</p>
+# Viji Helper
 
-Pratiksha is a local-first WhatsApp companion designed for private, SSD-backed automation. It keeps the durable system of record in Postgres, uses local LLMs through Ollama, indexes a file repository for resource suggestions, and gives the owner a polished dashboard for control, logs, and operational visibility.
+Local-first WhatsApp assistant for helping Vijayalakshmi Saravanan through your personal WhatsApp account. The assistant identity is **Pratiksha**, and send-bound replies use the `[Pratiksha]` prefix.
 
-![Pratiksha dashboard](docs/assets/screenshots/dashboard-home.png)
+This repository currently includes implementation through Phase 18, with Phase 17 still in controlled live-trial status: SSD-first foundation, database schema/repositories, `wacli` ingestion contract, policy/draft/outbox flow, local authenticated API plus API-backed CLI, hardened live `wacli` auth/read-only smoke checks, reconnect/backfill recovery, Postgres-canonical live allowlist polling, local Ollama generation/embedding via `apps/llm-proxy`, safe local resource indexing, ranked file suggestions with WhatsApp-only recipient confirmation, received-media promotion, dashboard/observability, backup/retention, failure-safety tests, Compose-owned live worker runtime, and project skill guidance. Phase 17 is complete only after the controlled real-world trial report is accepted.
 
-## What It Does
+## Documents
 
-- Runs as Docker services with a visual dashboard, API, Postgres, local LLM proxy, and storage guard.
-- Keeps canonical chats, drafts, resources, policy state, logs, and audit records in Postgres.
-- Indexes a local file repository so the assistant can suggest likely files instead of requiring exact filenames.
-- Blocks file sends until the trusted WhatsApp recipient confirms from WhatsApp.
-- Shows categorized logs plus raw container logs from the dashboard.
-- Supports dark mode, mobile views, upload controls, storage status, and health checks.
-
-## How It Was Made
-
-- TypeScript monorepo with shared packages for config, policy, AI, resources, database access, logging, metrics, and WhatsApp adapter contracts.
-- Docker Compose owns the runtime lifecycle, so start and stop are single-command operations.
-- Postgres plus pgvector is the canonical state store for messages, resources, drafts, jobs, policy, health, and audit events.
-- Ollama stays behind an internal LLM proxy so model settings, timeouts, and response parsing are centralized.
-- The dashboard is intentionally plain-language first: owner controls are separated from logs, and file-send confirmation remains recipient-side.
-
-## Screenshots
-
-| Assistant Controls | File Repository |
-| --- | --- |
-| ![Assistant controls](docs/assets/screenshots/assistant-dark.png) | ![File repository](docs/assets/screenshots/files.png) |
-
-| Raw Logs | Mobile |
-| --- | --- |
-| ![Raw logs](docs/assets/screenshots/logs-dark.png) | ![Mobile dashboard](docs/assets/screenshots/mobile.png) |
+- [Technical Design Document](docs/TDD.md)
+- [Entity Relationship Design](docs/ERD.md)
+- [Project Structure](docs/PROJECT_STRUCTURE.md)
+- [Developer Guide](docs/DEV_GUIDE.md)
+- [Overview](docs/00_OVERVIEW.md)
+- [Storage Profile](docs/04_STORAGE_PROFILE.md)
+- [Local LLM Runtime](docs/LOCAL_LLM.md)
+- [Chat Context Recovery](docs/08_CHAT_CONTEXT_RECOVERY.md)
+- [Implementation Phases](docs/09_IMPLEMENTATION_PHASES.md)
+- [Codex Skill Pack](docs/10_CODEX_SKILLS.md)
+- [Adapter Spike](docs/ADAPTER_SPIKE.md)
 
 ## Run And Stop
 
-Start everything:
+Run the full live assistant stack:
 
 ```bash
-corepack pnpm stack:dashboard:up
+cd "/Volumes/Arya 1TB/VijiAI/workspace/viji-helper" && corepack pnpm stack:live:up
 ```
 
-Stop everything:
+Stop the full stack before ejecting the SSD:
 
 ```bash
-corepack pnpm stack:down
+cd "/Volumes/Arya 1TB/VijiAI/workspace/viji-helper" && corepack pnpm stack:down
 ```
 
-Live WhatsApp branch startup:
+The live command first stops any stale Compose runtime, runs the WhatsApp store preflight, then starts Postgres, API, dashboard, LLM proxy, and the Docker-owned WhatsApp live worker. The preflight preserves `session.db`, backs up and removes only malformed disposable `wacli.db` cache files, warms missing/empty cache with a bounded `wacli sync --once`, checks `VIJI_WACLI_PREFLIGHT_REQUIRED_CHAT_QUERIES` when configured, and fails clearly if the WhatsApp auth/session database itself needs re-authentication. The stop command includes every Compose profile and removes orphaned containers, so no local Node server or stale Docker network keeps the SSD busy. Dashboard URL: `http://127.0.0.1:8788`.
+
+For dashboard-only safe mode without live WhatsApp sends:
 
 ```bash
-corepack pnpm stack:live:up
+cd "/Volumes/Arya 1TB/VijiAI/workspace/viji-helper" && corepack pnpm stack:dashboard:up
 ```
 
-That live command first stops stale Compose services, runs a WhatsApp store preflight, then starts the dashboard, API, Postgres, LLM proxy, storage guard, and live worker. The preflight preserves `session.db`, backs up any malformed disposable `wacli.db` cache into the configured backup folder, and warms a missing or empty cache with a bounded `wacli sync --once` before the worker starts.
-
-Dashboard: [http://localhost:8788](http://localhost:8788)
-API: [http://localhost:8787](http://localhost:8787)
-LLM proxy: [http://localhost:8791](http://localhost:8791)
-
-## First Setup
+Run a constrained Phase 17 self-test when only your own WhatsApp number is available:
 
 ```bash
-cp .env.example .env
-corepack pnpm install --frozen-lockfile
-corepack pnpm bootstrap:data
-corepack pnpm stack:dashboard:up
+cd "/Volumes/Arya 1TB/VijiAI/workspace/viji-helper" && VIJI_PHASE17_SELF_TEST_ENABLED=true corepack pnpm trial:self-test
 ```
 
-Use `.env` to choose the host data directory, resource folder, API token, Postgres password, and Ollama model. The default compose file stores runtime data under `./.pratiksha-data` and shareable files under `./viji-files`; both are ignored by git.
+This injects a redacted fresh inbound test event for the allowlisted `Myself` contact into Postgres, then the Docker live worker generates a Pratiksha reply and sends it through real `wacli`. It does not weaken the production rule: actual `from_me` WhatsApp messages never trigger auto-replies.
 
-## Local AI
+## Phase 0 Commands
 
-Pratiksha talks to Ollama through the `llm-proxy` service. The default model target is:
-
-```text
-qwen3:4b-instruct-2507-q4_K_M
+```bash
+corepack pnpm bootstrap:ssd
+corepack pnpm check:storage:ssd
+corepack pnpm test
+corepack pnpm typecheck
+docker compose config
+docker compose build storage-guard
+docker compose run --rm storage-guard
 ```
 
-The model is expected to run on the host at `http://host.docker.internal:11434`. You can change this in `.env` with `VIJI_OLLAMA_DOCKER_BASE_URL` and `VIJI_OLLAMA_MODEL`.
+## Phase 1 Commands
 
-## Architecture
-
-```mermaid
-flowchart LR
-  WA["WhatsApp adapter branch"] --> Worker["Worker orchestration"]
-  Dashboard["Dashboard"] --> API["API service"]
-  API --> PG["Postgres + pgvector"]
-  Worker --> PG
-  Worker --> LLM["Local LLM proxy"]
-  LLM --> Ollama["Ollama on host"]
-  API --> Files["File repository"]
-  Guard["Storage guard"] --> Files
+```bash
+node --test tests/migrations/phase1-migrations.test.mjs
+node --test tests/**/*.test.mjs
+corepack pnpm typecheck
+docker compose config
 ```
 
-The public main branch contains the dashboard, API, worker logic, resource matching, Postgres schema, local LLM proxy, and storage guard. Live WhatsApp adapter tooling is intentionally staged separately so it can be reviewed and merged with stricter operational checks.
-
-See [Live WhatsApp Adapter](docs/LIVE_WHATSAPP_ADAPTER.md) for the adapter branch runtime and guardrails.
-
-## Safety Model
-
-- No `.env`, runtime data, adapter auth stores, database files, logs, model blobs, or uploaded files should be committed.
-- File sends require recipient-side WhatsApp confirmation; owner dashboard approval is not treated as authority.
-- Postgres is the canonical state store. Adapter cache files are operational inputs only.
-- WhatsApp auth state is preserved across restarts. Disposable adapter cache corruption is handled before startup instead of requiring manual cleanup.
-- Storage usage is tracked against the configured Pratiksha data root, with filesystem free space treated as a separate safety signal.
-
-## Repository Map
-
-```text
-apps/dashboard       Visual control room and upload UI
-apps/api             HTTP API, dashboard data, resource endpoints
-apps/worker          Draft, resource, policy, and outbound orchestration
-apps/wa-adapter-wacli Live personal WhatsApp adapter boundary
-apps/llm-proxy       Local Ollama proxy
-apps/storage-guard   Storage root and quota checks
-tools/wacli-mark-read Adapter-owned read-receipt helper
-packages/*           Shared TypeScript libraries
-migrations           Postgres schema and seed data
-docs                 ERD and screenshots
-```
-
-## Checks
+## Phase 7 Commands
 
 ```bash
 corepack pnpm typecheck
-corepack pnpm test
-docker compose --profile dashboard config
+node --test tests/api-cli/phase7-api-cli.test.mjs
+corepack pnpm api:start
+corepack pnpm viji -- status
+corepack pnpm viji -- confirmations
 ```
 
-Some integration tests require Docker to be running because they spin up disposable Postgres containers.
+## Phase 8 Commands
 
-## Sensitive/Local-Only Files
+```bash
+corepack pnpm wa:auth:login
+node --test tests/whatsapp/phase8-wacli-hardening.test.mjs
+corepack pnpm wa:auth:status
+VIJI_WACLI_LIVE_SMOKE_ENABLED=true corepack pnpm wa:doctor:smoke
+VIJI_WACLI_LIVE_READ_SMOKE_ENABLED=true corepack pnpm wa:read:smoke
+```
 
-These files and directories should stay local and are ignored by git:
+## Phase 9 Commands
 
-- `.env`
-- `.pratiksha-data/`
-- `viji-files/`
-- local model files
-- Postgres runtime data
-- WhatsApp adapter auth/cache stores
-- backups, logs, and generated build output
+```bash
+node --test tests/whatsapp/phase9-reconnect-recovery.test.mjs
+VIJI_WACLI_LIVE_RECOVERY_SMOKE_ENABLED=true corepack pnpm wa:recovery:smoke
+corepack pnpm viji -- backfill status
+```
 
-## Creators
+## Phase 10 Commands
 
-### Vijaya Lakshmi D S
-[![GitHub](https://img.shields.io/badge/GitHub-@viji--saravanan-181717?logo=github&logoColor=white)](https://github.com/viji-saravanan)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-vijaya--lakshmi--saravanan-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/vijaya-lakshmi-saravanan-305972298/)
+```bash
+node --test tests/whatsapp/phase10-live-polling.test.mjs
+corepack pnpm wa:ingest:once
+```
 
-### Arya Subramani S
-[![GitHub](https://img.shields.io/badge/GitHub-@callmearya-181717?logo=github&logoColor=white)](https://github.com/callmearya)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-arya--subramani-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/arya-subramani/)
+## Phase 12 Commands
 
-## Contributing
+```bash
+node --test tests/resources/phase12-resource-catalog.test.mjs
+node --test tests/resources/phase12-resource-api-cli.test.mjs
+corepack pnpm viji -- resources list
+corepack pnpm viji -- resources index --scope library --yes
+corepack pnpm viji -- resources register library/<file-name> --yes
+```
 
-Issues and PRs are welcome. For changes touching WhatsApp live automation, file-send policy, storage behavior, or local model execution, open a PR with the checks you ran and call out any live-account behavior explicitly.
+Shareable files belong under `VIJI_RESOURCE_ROOT`, which defaults to `/Volumes/Arya 1TB/VijiAI/viji-files`. The CLI/API only register files that resolve under that root; arbitrary local paths and path escapes are rejected.
+
+## Phase 13 Commands
+
+```bash
+node --test tests/whatsapp/phase13-media-sync.test.mjs
+corepack pnpm wa:media:once
+```
+
+Allowlisted WhatsApp media downloads use `VIJI_WACLI_MEDIA_ROOT`, defaulting to `/Volumes/Arya 1TB/VijiAI/wacli/media`. Downloaded media is linked into `res_file_assets`; reusable received media must be promoted into `res_resources` before it can be proposed or sent again.
+
+## Message Storage
+
+Postgres is the canonical application store for WhatsApp messages, conversations, adapter events, sync cursors, drafts, outbox jobs, and audit records. The `wacli` store may still create SQLite files for its own auth/session/cache internals, but Viji Helper treats `wacli.db` as disposable adapter cache only; dashboard, CLI, worker, and AI context must read from Postgres. `corepack pnpm stack:live:up` automatically backs up malformed `wacli.db` files under `VIJI_WACLI_BACKUP_ROOT`, warms missing/empty cache before Docker starts, and preserves `session.db` so QR re-auth is not triggered unless the session database itself is missing or malformed.
+
+Current live intake is poll-based. `corepack pnpm wa:ingest:once` polls allowlisted chats and imports new inbound and `from_me` messages into Postgres. `corepack pnpm stack:live:up` starts the Docker-owned live worker loop, which uses `VIJI_LIVE_POLL_INTERVAL_MS` as the target interval, refreshes the `wacli` store before polling when `VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED=true`, and bounds each underlying `wacli` command with `VIJI_WACLI_TIMEOUT`. The live default target interval is `1000ms` with a reliability-first `12s` sync idle wait; successful live replies also call the adapter-owned `wacli-mark-read` helper so the inbound trigger or file-confirmation message is marked read after Pratiksha responds.
+
+## Dashboard Commands
+
+```bash
+corepack pnpm dashboard:build
+corepack pnpm dashboard:start
+corepack pnpm stack:dashboard:up
+corepack pnpm stack:live:up
+corepack pnpm stack:down
+```
+
+For normal operation, use Compose as the lifecycle boundary. `corepack pnpm stack:dashboard:up` starts Postgres, API, and dashboard containers together, with the dashboard proxying the API through Docker service DNS at `http://api:8787`. `corepack pnpm stack:live:up` additionally starts the live worker with auto-reply and live-send enabled at command scope. `corepack pnpm stack:down` stops all project profiles before ejecting the SSD, so long-running Node servers and stale profile containers are not left holding files open on the external drive.
+
+The dashboard serves at `http://127.0.0.1:8788` by default and proxies the API server-side. Browser assets do not contain `VIJI_API_TOKEN`; the dashboard service injects it server-side. `corepack pnpm dashboard:start` is for local development only and should not be used as the normal unattended runtime.
+
+## Backup and Retention Commands
+
+```bash
+corepack pnpm backup:run -- --json
+corepack pnpm restore:check -- --json
+corepack pnpm retention:plan
+corepack pnpm retention:apply -- --json
+```
+
+Backups are compressed Postgres custom-format dumps under `/Volumes/Arya 1TB/VijiAI/pgbackups`. Retention is dry-run by default and only prunes backup/tmp artifacts in the current implementation.
+
+## Local AI Commands
+
+```bash
+corepack pnpm typecheck
+node --test tests/ai/ollama-client.test.mjs
+corepack pnpm ai:smoke
+corepack pnpm llm-proxy:start
+docker compose --profile ai up --build llm-proxy
+```
+
+## Current Direction
+
+- Personal WhatsApp first, not WhatsApp Business.
+- `wacli` is the preferred Phase 0/Phase 1 adapter candidate because it is local, scriptable, supports sync/search/send/file operations, and does not require a browser container.
+- Local AI uses Ollama with `qwen3:4b-instruct-2507-q4_K_M` as the first real model on this Mac, with model files under `/Volumes/Arya 1TB/VijiAI/models/ollama`.
+- Local embeddings use `mxbai-embed-large` through the same SSD-backed Ollama store.
+- The adapter boundary stays pluggable so we can replace `wacli` with direct `whatsmeow`, Baileys, whatsapp-web.js, Evolution API, or the official WhatsApp Business Cloud API later.
+- All heavy state, models, logs, database files, media, and backups are designed to live under `/Volumes/Arya 1TB/VijiAI` with a 200 GB maximum allocation.
+- The active source workspace lives at `/Volumes/Arya 1TB/VijiAI/workspace/viji-helper`, so dependencies and build artifacts stay on the SSD too.
+- Chat context must survive connect/reconnect by syncing, backfilling, and summarizing allowlisted WhatsApp conversations.
+- If the external drive, network, WhatsApp session, database, or AI runtime is unavailable, the system should enter an explicit idle state rather than sending risky or partial replies.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

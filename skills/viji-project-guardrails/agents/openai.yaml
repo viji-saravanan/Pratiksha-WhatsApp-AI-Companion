@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Project Guardrails"
+  short_description: "Shared project rules and phase gates"
+  default_prompt: "Use $viji-project-guardrails before changing Viji Helper code."

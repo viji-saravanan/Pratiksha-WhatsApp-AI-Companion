@@ -1,4 +1,4 @@
-export const DEFAULT_DATA_ROOT = "/data/pratiksha";
+export const DEFAULT_DATA_ROOT = "/Volumes/Arya 1TB/VijiAI";
 export const DEFAULT_SENTINEL_FILE = ".viji-helper-root";
 export const DEFAULT_RESOURCE_ROOT = `${DEFAULT_DATA_ROOT}/viji-files`;
 export const DEFAULT_WACLI_STORE = `${DEFAULT_DATA_ROOT}/wacli/store`;

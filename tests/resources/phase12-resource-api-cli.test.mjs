@@ -19,7 +19,7 @@ const { createPgPool } = await import("../../packages/db/dist/index.js");
 const { createApiServer } = await import("../../apps/api/dist/index.js");
 const { runCli } = await import("../../apps/cli/dist/index.js");
 
-const token = "test-resource-api-token";
+const token = "phase12-resource-api-token";
 
 function captureOutput() {
   const captured = {
@@ -95,13 +95,13 @@ test("resource API and CLI index viji-files and reject escaped paths", async () 
     const libraryRoot = join(resourceRoot, "library");
     await mkdir(libraryRoot, { recursive: true });
     await writeFile(
-      join(libraryRoot, "recipient_profile.txt"),
-      "Primary Recipient profile, resume, portfolio, and education notes.",
+      join(libraryRoot, "viji_profile.txt"),
+      "Vijayalakshmi profile, resume, portfolio, and education notes.",
       "utf8"
     );
     await writeFile(
-      join(libraryRoot, "recipient_12_marksheet.txt"),
-      "Primary Recipient twelfth standard marksheet with physics and maths marks.",
+      join(libraryRoot, "viji_12_marksheet.txt"),
+      "Vijayalakshmi twelfth standard marksheet with physics and maths marks.",
       "utf8"
     );
     await writeFile(join(tempRoot, "outside.txt"), "outside file", "utf8");
@@ -136,7 +136,7 @@ test("resource API and CLI index viji-files and reject escaped paths", async () 
       assert.equal(indexed.body.count, 2);
       assert.deepEqual(
         indexed.body.resources.map((resource) => resource.registeredFileName),
-        ["recipient_12_marksheet.txt", "recipient_profile.txt"]
+        ["viji_12_marksheet.txt", "viji_profile.txt"]
       );
       assert.match(
         indexed.body.resources[0].contentSummary,
@@ -151,18 +151,18 @@ test("resource API and CLI index viji-files and reject escaped paths", async () 
         [
           "resources",
           "register",
-          "library/recipient_12_marksheet.txt",
+          "library/viji_12_marksheet.txt",
           "--alias",
           "12th marksheet",
           "--title",
-          "Recipient 12th Marksheet",
+          "Viji 12th Marksheet",
           "--yes"
         ],
         cliEnv
       );
-      assert.equal(registered.resource.registeredFileName, "recipient_12_marksheet.txt");
+      assert.equal(registered.resource.registeredFileName, "viji_12_marksheet.txt");
       assert.ok(registered.resource.aliases.includes("12th marksheet"));
-      assert.equal(registered.resource.title, "Recipient 12th Marksheet");
+      assert.equal(registered.resource.title, "Viji 12th Marksheet");
 
       const rejected = captureOutput();
       const rejectedExit = await runCli(

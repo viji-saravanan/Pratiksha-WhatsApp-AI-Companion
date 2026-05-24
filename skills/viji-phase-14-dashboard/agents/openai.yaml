@@ -1,0 +1,5 @@
+version: 1
+openai:
+  display_name: "Viji Phase 14 Dashboard"
+  short_description: "Local operations dashboard"
+  default_prompt: "Use $viji-phase-14-dashboard to implement or review the safe local operations dashboard."

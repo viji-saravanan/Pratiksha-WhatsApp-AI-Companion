@@ -68,9 +68,9 @@ test("ollama client parses structured draft responses", async () => {
   const fetchImpl = async () => {
     return jsonResponse({
       response: JSON.stringify({
-        reply_text: "Do you mean Primary_Recipient_Marksheet.pdf?",
+        reply_text: "Do you mean Vijayalakshmi_Marksheet.pdf?",
         intent: "resource_request",
-        resource_query: "Primary_Recipient_Marksheet.pdf",
+        resource_query: "Vijayalakshmi_Marksheet.pdf",
         confidence: 0.86,
         refusal_reason: null
       }),
@@ -94,9 +94,9 @@ test("ollama client parses structured draft responses", async () => {
     promptHash: "hash"
   });
 
-  assert.equal(result.text, "Do you mean Primary_Recipient_Marksheet.pdf?");
+  assert.equal(result.text, "Do you mean Vijayalakshmi_Marksheet.pdf?");
   assert.equal(result.intent, "resource_request");
-  assert.equal(result.resourceQuery, "Primary_Recipient_Marksheet.pdf");
+  assert.equal(result.resourceQuery, "Vijayalakshmi_Marksheet.pdf");
   assert.equal(result.confidence, 0.86);
 });
 
@@ -131,7 +131,7 @@ test("ollama client maps missing model failures to ai.model_missing", async () =
 test("ollama client neutralizes unsafe file-send claims", async () => {
   const fetchImpl = async () => {
     return jsonResponse({
-      response: "Here's your marksheet: Primary_Recipient_Marksheet.pdf",
+      response: "Here's your marksheet: Vijayalakshmi_Marksheet.pdf",
       prompt_eval_count: 50,
       eval_count: 12
     });
@@ -152,7 +152,7 @@ test("ollama client neutralizes unsafe file-send claims", async () => {
     promptHash: "hash"
   });
 
-  assert.equal(result.text, "Do you mean Primary_Recipient_Marksheet.pdf?");
+  assert.equal(result.text, "Do you mean Vijayalakshmi_Marksheet.pdf?");
 });
 
 test("assistant prefix parser neutralizes unsafe file-send claims", async () => {
@@ -250,14 +250,14 @@ test("ollama embedding wrapper returns vector metadata", async () => {
       }
     },
     {
-      text: "Registered filename: Primary_Recipient_Marksheet.pdf"
+      text: "Registered filename: Vijayalakshmi_Marksheet.pdf"
     }
   );
 
   assert.equal(requestUrl, "http://127.0.0.1:11434/api/embed");
   assert.deepEqual(requestBody, {
     model: "mxbai-embed-large",
-    input: "Registered filename: Primary_Recipient_Marksheet.pdf"
+    input: "Registered filename: Vijayalakshmi_Marksheet.pdf"
   });
   assert.deepEqual(result.vector, [0.1, 0.2, 0.3]);
   assert.equal(result.dimensions, 3);

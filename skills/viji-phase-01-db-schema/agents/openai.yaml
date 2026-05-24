@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 01 DB Schema"
+  short_description: "Core Postgres schema and migrations"
+  default_prompt: "Use $viji-phase-01-db-schema to implement Phase 1 migrations."

@@ -133,7 +133,7 @@ test("Phase 17 trial status is computed from API payloads without leaking filena
     const report = await collectPhase17TrialStatus({
       env: {
         VIJI_API_BASE_URL: baseUrl,
-        VIJI_API_TOKEN: "test-trial-token",
+        VIJI_API_TOKEN: "phase17-token",
         VIJI_LIVE_POLL_INTERVAL_MS: "5000"
       },
       now: new Date("2026-05-08T00:00:00.000Z")
@@ -146,7 +146,7 @@ test("Phase 17 trial status is computed from API payloads without leaking filena
     assert.equal(report.runtime.llmModel, "local-model-from-api");
     assert.equal(report.states.context.fresh, 2);
     assert.equal(
-      requests.every((request) => request.authorization === "Bearer test-trial-token"),
+      requests.every((request) => request.authorization === "Bearer phase17-token"),
       true
     );
     assert.deepEqual(

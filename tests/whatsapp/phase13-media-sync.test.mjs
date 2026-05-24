@@ -72,7 +72,7 @@ test("Phase 13 queues, downloads, and promotes allowlisted received media", asyn
   assert.deepEqual(normalized.messages[0].media, {
     externalMediaId: "wamid.redacted.vijayalakshmi.media.1001",
     mimeType: "image/jpeg",
-    fileName: "recipient_passport_photo.jpg",
+    fileName: "viji_passport_photo.jpg",
     sizeBytes: 21
   });
 
@@ -88,12 +88,12 @@ test("Phase 13 queues, downloads, and promotes allowlisted received media", asyn
     try {
       const repositories = createRepositories(pool);
       const person = await repositories.contacts.createPerson({
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         notes: "Synthetic Phase 13 media contact"
       });
       const contact = await repositories.contacts.createAllowlistedContact({
         ownerPersonId: person.personId,
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         waJid: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
         trustLevel: "trusted"
       });
@@ -135,7 +135,7 @@ test("Phase 13 queues, downloads, and promotes allowlisted received media", asyn
       `);
       assert.equal(mediaCount.rows[0].count, 1);
 
-      const downloadedPath = join(mediaRoot, "recipient_passport_photo.jpg");
+      const downloadedPath = join(mediaRoot, "viji_passport_photo.jpg");
       await writeFile(downloadedPath, "synthetic image bytes", "utf8");
       const calls = [];
       const adapter = {

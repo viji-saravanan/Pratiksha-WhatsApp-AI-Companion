@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 02 DB Repos"
+  short_description: "Typed repositories and transactions"
+  default_prompt: "Use $viji-phase-02-db-repositories to implement Phase 2 data access."

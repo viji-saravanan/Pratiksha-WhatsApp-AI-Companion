@@ -2,7 +2,7 @@ import "./lib/load-env.mjs";
 import { mkdir, open } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-const defaultDataRoot = "/data/pratiksha";
+const defaultDataRoot = "/Volumes/Arya 1TB/VijiAI";
 const dataRoot = resolve(process.env.VIJI_DATA_ROOT || defaultDataRoot);
 const sentinelFile = process.env.VIJI_SENTINEL_FILE || ".viji-helper-root";
 
@@ -34,7 +34,7 @@ const requiredDirectories = [
 ];
 
 function assertSafeRoot(rootPath) {
-  if (rootPath === "/" || rootPath === "/Volumes" || rootPath === "/data") {
+  if (rootPath === "/" || rootPath === "/Volumes" || rootPath === "/Volumes/Arya 1TB") {
     throw new Error(`Refusing to bootstrap unsafe VIJI_DATA_ROOT: ${rootPath}`);
   }
 }

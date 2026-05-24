@@ -63,7 +63,7 @@ export function createCliApiClient(
 ): CliApiClient {
   return new CliApiClient({
     baseUrl: env.VIJI_API_BASE_URL || "http://127.0.0.1:8787",
-    token: env.VIJI_API_TOKEN || "change-me-api-token",
+    token: env.VIJI_API_TOKEN || "local-dev-token",
     fetchImpl
   });
 }

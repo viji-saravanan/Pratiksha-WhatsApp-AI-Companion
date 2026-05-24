@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 12 Resources"
+  short_description: "Resource catalog and file proposals"
+  default_prompt: "Use $viji-phase-12-resources to build recipient-confirmed resource sharing."

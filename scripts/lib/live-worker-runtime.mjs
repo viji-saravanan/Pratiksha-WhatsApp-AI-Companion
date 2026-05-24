@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 
-const DEFAULT_DATA_ROOT = "/data/pratiksha";
+const DEFAULT_DATA_ROOT = "/Volumes/Arya 1TB/VijiAI";
 const DEFAULT_SENTINEL_FILE = ".viji-helper-root";
 
 export function resolveLiveWorkerStorageGate(

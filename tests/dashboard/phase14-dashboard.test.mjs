@@ -71,7 +71,7 @@ test("Phase 14 dashboard browser assets do not expose secrets or approval calls"
   const serverSource = await readTree("apps/dashboard/src", ".ts");
   const sharedSource = await readTree("packages/shared/src", ".ts");
 
-  assert.equal(/VIJI_API_TOKEN|DATABASE_URL|POSTGRES_PASSWORD|development-token/.test(assetSource), false);
+  assert.equal(/VIJI_API_TOKEN|DATABASE_URL|POSTGRES_PASSWORD|local-dev-token/.test(assetSource), false);
   assert.equal(/\/confirmations\/[^`"']+\/confirm/.test(assetSource), false);
   assert.match(assetSource, /WhatsApp-only approval|WhatsApp approval only/);
   assert.match(assetSource, /Plain-language status/);
@@ -100,7 +100,7 @@ test("Phase 14 dashboard browser assets do not expose secrets or approval calls"
 });
 
 test("dashboard serves static UI, injects API auth server-side, and blocks owner approval", async () => {
-  const token = "test-dashboard-token";
+  const token = "phase14-dashboard-token";
   const upstreamRequests = [];
   const tempRoot = await mkdtemp(join(tmpdir(), "viji-dashboard-upload-"));
   const resourceRoot = join(tempRoot, "viji-files");
@@ -206,7 +206,7 @@ test("dashboard serves static UI, injects API auth server-side, and blocks owner
       );
 
       const form = new FormData();
-      form.set("file", new Blob(["uploaded profile notes"], { type: "text/plain" }), "Recipient Upload Notes.txt");
+      form.set("file", new Blob(["uploaded profile notes"], { type: "text/plain" }), "Viji Upload Notes.txt");
       form.set("title", "Uploaded notes");
       form.set("aliases", "upload test, notes");
       const upload = await fetch(`${dashboardBaseUrl}/api/resources/upload`, {
@@ -215,18 +215,18 @@ test("dashboard serves static UI, injects API auth server-side, and blocks owner
       });
       assert.equal(upload.status, 201);
       const uploadPayload = await upload.json();
-      assert.equal(uploadPayload.resource.registeredFileName, "Recipient_Upload_Notes.txt");
+      assert.equal(uploadPayload.resource.registeredFileName, "Viji_Upload_Notes.txt");
       const registerRequest = upstreamRequests.find((request) => request.url === "/resources/register");
       assert.ok(registerRequest);
       assert.equal(registerRequest.authorization, `Bearer ${token}`);
       assert.deepEqual(JSON.parse(registerRequest.body), {
-        path: "staged/Recipient_Upload_Notes.txt",
+        path: "staged/Viji_Upload_Notes.txt",
         title: "Uploaded notes",
         aliases: ["upload test", "notes"],
         description: null
       });
       assert.equal(
-        (await stat(join(resourceRoot, "staged", "Recipient_Upload_Notes.txt"))).isFile(),
+        (await stat(join(resourceRoot, "staged", "Viji_Upload_Notes.txt"))).isFile(),
         true
       );
 

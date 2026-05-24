@@ -1,10 +1,9 @@
-name: pratiksha
+name: viji-helper
 
-x-pratiksha-env: &pratiksha-env
-  VIJI_DATA_ROOT: ${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}
+x-viji-env: &viji-env
+  VIJI_DATA_ROOT: ${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}
   VIJI_STORAGE_PROFILE: ${VIJI_STORAGE_PROFILE:-large-200gb}
-  VIJI_SENTINEL_FILE: ${VIJI_SENTINEL_FILE:-.pratiksha-root}
-  VIJI_RESOURCE_ROOT: ${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}
+  VIJI_SENTINEL_FILE: ${VIJI_SENTINEL_FILE:-.viji-helper-root}
   VIJI_ASSISTANT_NAME: ${VIJI_ASSISTANT_NAME:-Pratiksha}
   VIJI_ASSISTANT_REPLY_PREFIX: ${VIJI_ASSISTANT_REPLY_PREFIX:-[Pratiksha]}
 
@@ -14,37 +13,20 @@ services:
       context: .
       dockerfile: infra/docker/storage-guard.Dockerfile
     environment:
-      <<: *pratiksha-env
+      <<: *viji-env
     volumes:
-      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}:${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}"
+      - "${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}:${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}"
     restart: "no"
-
-  postgres:
-    image: pgvector/pgvector:pg16
-    profiles: ["db", "app", "dashboard", "live"]
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-pratiksha}
-      POSTGRES_USER: ${POSTGRES_USER:-pratiksha}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-postgres-password}
-    volumes:
-      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}/postgres:/var/lib/postgresql/data"
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pratiksha} -d ${POSTGRES_DB:-pratiksha}"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
 
   llm-proxy:
     build:
       context: .
       dockerfile: infra/docker/llm-proxy.Dockerfile
-    profiles: ["ai", "app", "dashboard"]
+    profiles: ["ai", "app"]
     environment:
       VIJI_LLM_PROXY_HOST: "0.0.0.0"
       VIJI_LLM_PROXY_PORT: ${VIJI_LLM_PROXY_PORT:-8791}
-      VIJI_LLM_PROXY_TOKEN: ${VIJI_LLM_PROXY_TOKEN:-change-me-llm-token}
+      VIJI_LLM_PROXY_TOKEN: ${VIJI_LLM_PROXY_TOKEN:-local-llm-token}
       VIJI_OLLAMA_BASE_URL: ${VIJI_OLLAMA_DOCKER_BASE_URL:-http://host.docker.internal:11434}
       VIJI_OLLAMA_MODEL: ${VIJI_OLLAMA_MODEL:-qwen3:4b-instruct-2507-q4_K_M}
       VIJI_OLLAMA_EMBEDDING_MODEL: ${VIJI_OLLAMA_EMBEDDING_MODEL:-mxbai-embed-large}
@@ -62,22 +44,27 @@ services:
       dockerfile: infra/docker/api.Dockerfile
     profiles: ["app", "dashboard"]
     environment:
-      <<: *pratiksha-env
+      <<: *viji-env
       VIJI_API_HOST: "0.0.0.0"
       VIJI_API_PORT: ${VIJI_API_PORT:-8787}
-      VIJI_API_TOKEN: ${VIJI_API_TOKEN:-change-me-api-token}
-      DATABASE_URL: ${DATABASE_DOCKER_URL:-postgres://${POSTGRES_USER:-pratiksha}:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/${POSTGRES_DB:-pratiksha}}
-      VIJI_DEFAULT_REPLY_MODE: ${VIJI_DEFAULT_REPLY_MODE:-confirm_resource}
+      VIJI_API_TOKEN: ${VIJI_API_TOKEN:-local-dev-token}
+      DATABASE_URL: ${DATABASE_DOCKER_URL:-postgres://${POSTGRES_USER:-viji}:${POSTGRES_PASSWORD:-1234}@postgres:5432/${POSTGRES_DB:-viji_helper}}
+      VIJI_DEFAULT_REPLY_MODE: ${VIJI_DEFAULT_REPLY_MODE:-auto}
       VIJI_AUTO_REPLY_ENABLED: ${VIJI_AUTO_REPLY_ENABLED:-false}
+      VIJI_RESOURCE_ROOT: ${VIJI_RESOURCE_ROOT:-/Volumes/Arya 1TB/VijiAI/viji-files}
+      VIJI_WACLI_STORE: ${VIJI_WACLI_STORE:-/Volumes/Arya 1TB/VijiAI/wacli/store}
+      VIJI_WACLI_MEDIA_ROOT: ${VIJI_WACLI_MEDIA_ROOT:-/Volumes/Arya 1TB/VijiAI/wacli/media}
+      VIJI_WACLI_LIVE_SEND_ENABLED: ${VIJI_WACLI_LIVE_SEND_ENABLED:-false}
+      VIJI_WACLI_LIVE_READ_SMOKE_ENABLED: ${VIJI_WACLI_LIVE_READ_SMOKE_ENABLED:-false}
+      VIJI_WACLI_LIVE_RECOVERY_SMOKE_ENABLED: ${VIJI_WACLI_LIVE_RECOVERY_SMOKE_ENABLED:-false}
+      VIJI_WACLI_LIVE_SEND_SMOKE_ENABLED: ${VIJI_WACLI_LIVE_SEND_SMOKE_ENABLED:-false}
       VIJI_LLM_PROVIDER: ${VIJI_LLM_PROVIDER:-ollama}
-      VIJI_OLLAMA_BASE_URL: ${VIJI_OLLAMA_DOCKER_BASE_URL:-http://host.docker.internal:11434}
       VIJI_OLLAMA_MODEL: ${VIJI_OLLAMA_MODEL:-qwen3:4b-instruct-2507-q4_K_M}
       VIJI_OLLAMA_EMBEDDING_MODEL: ${VIJI_OLLAMA_EMBEDDING_MODEL:-mxbai-embed-large}
     ports:
       - "${VIJI_API_PORT:-8787}:8787"
     volumes:
-      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}:${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}"
-      - "${PRATIKSHA_HOST_RESOURCE_ROOT:-./viji-files}:${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}"
+      - "${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}:${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -89,15 +76,17 @@ services:
       dockerfile: infra/docker/live-worker.Dockerfile
     profiles: ["live"]
     environment:
-      <<: *pratiksha-env
-      DATABASE_URL: ${DATABASE_DOCKER_URL:-postgres://${POSTGRES_USER:-pratiksha}:${POSTGRES_PASSWORD:-change-me-postgres-password}@postgres:5432/${POSTGRES_DB:-pratiksha}}
+      <<: *viji-env
+      DATABASE_URL: ${DATABASE_DOCKER_URL:-postgres://${POSTGRES_USER:-viji}:${POSTGRES_PASSWORD:-1234}@postgres:5432/${POSTGRES_DB:-viji_helper}}
       VIJI_AUTO_REPLY_ENABLED: ${VIJI_AUTO_REPLY_ENABLED:-false}
-      VIJI_DEFAULT_REPLY_MODE: ${VIJI_DEFAULT_REPLY_MODE:-confirm_resource}
+      VIJI_DEFAULT_REPLY_MODE: ${VIJI_DEFAULT_REPLY_MODE:-auto}
       VIJI_DEFAULT_CHANNEL_ACCOUNT_ID: ${VIJI_DEFAULT_CHANNEL_ACCOUNT_ID:-00000000-0000-4000-8000-000000000003}
+      VIJI_RESOURCE_ROOT: ${VIJI_RESOURCE_ROOT:-/Volumes/Arya 1TB/VijiAI/viji-files}
       VIJI_WACLI_BIN: "/usr/local/bin/wacli"
-      VIJI_WACLI_STORE: ${VIJI_WACLI_STORE:-/data/pratiksha/wacli/store}
-      VIJI_WACLI_MEDIA_ROOT: ${VIJI_WACLI_MEDIA_ROOT:-/data/pratiksha/wacli/media}
+      VIJI_WACLI_STORE: ${VIJI_WACLI_STORE:-/Volumes/Arya 1TB/VijiAI/wacli/store}
+      VIJI_WACLI_MEDIA_ROOT: ${VIJI_WACLI_MEDIA_ROOT:-/Volumes/Arya 1TB/VijiAI/wacli/media}
       VIJI_WACLI_TIMEOUT: ${VIJI_WACLI_TIMEOUT:-30s}
+      VIJI_WACLI_SYNC_TIMEOUT: ${VIJI_WACLI_SYNC_TIMEOUT:-75s}
       VIJI_WACLI_MARK_READ_BIN: ${VIJI_WACLI_MARK_READ_BIN:-/usr/local/bin/wacli-mark-read}
       VIJI_WACLI_MARK_READ_ENABLED: ${VIJI_WACLI_MARK_READ_ENABLED:-true}
       VIJI_WACLI_MARK_READ_TIMEOUT: ${VIJI_WACLI_MARK_READ_TIMEOUT:-5s}
@@ -105,8 +94,14 @@ services:
       VIJI_LIVE_INGEST_CONTACT_LIMIT: ${VIJI_LIVE_INGEST_CONTACT_LIMIT:-100}
       VIJI_LIVE_INGEST_CHAT_SEARCH_LIMIT: ${VIJI_LIVE_INGEST_CHAT_SEARCH_LIMIT:-5}
       VIJI_LIVE_INGEST_MESSAGE_LIMIT: ${VIJI_LIVE_INGEST_MESSAGE_LIMIT:-25}
-      VIJI_LIVE_POLL_INTERVAL_MS: ${VIJI_LIVE_POLL_INTERVAL_MS:-3000}
-      VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED: ${VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED:-true}
+      VIJI_LIVE_POLL_INTERVAL_MS: ${VIJI_LIVE_POLL_INTERVAL_MS:-1000}
+      VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED: ${VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED:-false}
+      VIJI_LIVE_SYNC_SCHEDULER_ENABLED: ${VIJI_LIVE_SYNC_SCHEDULER_ENABLED:-true}
+      VIJI_LIVE_STARTUP_SYNC_ENABLED: ${VIJI_LIVE_STARTUP_SYNC_ENABLED:-true}
+      VIJI_LIVE_SYNC_INTERVAL_MS: ${VIJI_LIVE_SYNC_INTERVAL_MS:-60000}
+      VIJI_LIVE_SYNC_RETRY_MIN_MS: ${VIJI_LIVE_SYNC_RETRY_MIN_MS:-15000}
+      VIJI_LIVE_SYNC_RETRY_MAX_MS: ${VIJI_LIVE_SYNC_RETRY_MAX_MS:-300000}
+      VIJI_LIVE_SYNC_JITTER_RATIO: ${VIJI_LIVE_SYNC_JITTER_RATIO:-0.15}
       VIJI_LIVE_SYNC_IDLE_EXIT: ${VIJI_LIVE_SYNC_IDLE_EXIT:-12s}
       VIJI_LIVE_SYNC_REFRESH_CONTACTS: ${VIJI_LIVE_SYNC_REFRESH_CONTACTS:-false}
       VIJI_LIVE_SYNC_REFRESH_GROUPS: ${VIJI_LIVE_SYNC_REFRESH_GROUPS:-false}
@@ -121,8 +116,8 @@ services:
       VIJI_OLLAMA_NUM_PREDICT: ${VIJI_OLLAMA_NUM_PREDICT:-160}
       VIJI_OLLAMA_CONTEXT_WINDOW_TOKENS: ${VIJI_OLLAMA_CONTEXT_WINDOW_TOKENS:-4096}
     volumes:
-      - "${PRATIKSHA_HOST_DATA_ROOT:-./.pratiksha-data}:${VIJI_CONTAINER_DATA_ROOT:-/data/pratiksha}"
-      - "${PRATIKSHA_HOST_RESOURCE_ROOT:-./viji-files}:${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}"
+      - "${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}:${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}"
+      - "${VIJI_RESOURCE_ROOT:-/Volumes/Arya 1TB/VijiAI/viji-files}:${VIJI_RESOURCE_ROOT:-/Volumes/Arya 1TB/VijiAI/viji-files}"
     depends_on:
       postgres:
         condition: service_healthy
@@ -137,20 +132,87 @@ services:
       VIJI_DASHBOARD_HOST: "0.0.0.0"
       VIJI_DASHBOARD_PORT: ${VIJI_DASHBOARD_PORT:-8788}
       VIJI_DASHBOARD_API_BASE_URL: ${VIJI_DASHBOARD_DOCKER_API_BASE_URL:-http://api:8787}
-      VIJI_API_TOKEN: ${VIJI_API_TOKEN:-change-me-api-token}
+      VIJI_API_TOKEN: ${VIJI_API_TOKEN:-local-dev-token}
       VIJI_CONTAINER_LOGS_ENABLED: ${VIJI_CONTAINER_LOGS_ENABLED:-true}
       VIJI_DOCKER_SOCKET_PATH: ${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}
-      VIJI_DOCKER_COMPOSE_PROJECT: ${VIJI_DOCKER_COMPOSE_PROJECT:-pratiksha}
+      VIJI_DOCKER_COMPOSE_PROJECT: ${VIJI_DOCKER_COMPOSE_PROJECT:-viji-helper}
       VIJI_CONTAINER_LOGS_TAIL: ${VIJI_CONTAINER_LOGS_TAIL:-120}
       VIJI_CONTAINER_LOGS_TIMEOUT_MS: ${VIJI_CONTAINER_LOGS_TIMEOUT_MS:-5000}
-      VIJI_RESOURCE_ROOT: ${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}
-      VIJI_DASHBOARD_UPLOAD_MAX_BYTES: ${VIJI_DASHBOARD_UPLOAD_MAX_BYTES:-52428800}
     ports:
       - "${VIJI_DASHBOARD_PORT:-8788}:8788"
     volumes:
       - "${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}:${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}:ro"
-      - "${PRATIKSHA_HOST_RESOURCE_ROOT:-./viji-files}:${VIJI_CONTAINER_RESOURCE_ROOT:-/data/pratiksha/viji-files}"
+      - "${VIJI_RESOURCE_ROOT:-/Volumes/Arya 1TB/VijiAI/viji-files}:${VIJI_RESOURCE_ROOT:-/Volumes/Arya 1TB/VijiAI/viji-files}"
     depends_on:
       api:
         condition: service_started
     restart: unless-stopped
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    profiles: ["db", "app", "dashboard", "live"]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-viji_helper}
+      POSTGRES_USER: ${POSTGRES_USER:-viji}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-1234}
+    volumes:
+      - "${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}/postgres:/var/lib/postgresql/data"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-viji} -d ${POSTGRES_DB:-viji_helper}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  prometheus:
+    image: prom/prometheus:latest
+    profiles: ["observability"]
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+    volumes:
+      - "./infra/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro"
+      - "${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}/prometheus:/prometheus"
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+
+  loki:
+    image: grafana/loki:latest
+    profiles: ["observability"]
+    command:
+      - "-config.file=/etc/loki/local-config.yaml"
+    volumes:
+      - "./infra/observability/loki-config.yml:/etc/loki/local-config.yaml:ro"
+      - "${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}/loki:/loki"
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+
+  promtail:
+    image: grafana/promtail:latest
+    profiles: ["observability"]
+    command:
+      - "-config.file=/etc/promtail/config.yml"
+    volumes:
+      - "./infra/observability/promtail-config.yml:/etc/promtail/config.yml:ro"
+      - "${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}:${VIJI_DOCKER_SOCKET_PATH:-/var/run/docker.sock}:ro"
+    depends_on:
+      - loki
+
+  grafana:
+    image: grafana/grafana:latest
+    profiles: ["observability"]
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-1234}
+    volumes:
+      - "./infra/observability/grafana/provisioning:/etc/grafana/provisioning:ro"
+      - "./infra/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro"
+      - "${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}/grafana:/var/lib/grafana"
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
+      - loki

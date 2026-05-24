@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 10 Live Polling"
+  short_description: "Postgres-canonical WhatsApp polling"
+  default_prompt: "Use $viji-phase-10-live-polling to implement safe allowlisted live polling."

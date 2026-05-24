@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 13 Dashboard"
+  short_description: "Operational dashboard surfaces"
+  default_prompt: "Deprecated $viji-phase-13-dashboard alias. Use $viji-phase-14-dashboard for dashboard work."

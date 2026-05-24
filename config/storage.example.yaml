@@ -1,4 +1,4 @@
-data_root: "/data/pratiksha"
+data_root: "/Volumes/Arya 1TB/VijiAI"
 sentinel_file: ".viji-helper-root"
 active_profile: "large-200gb"
 profiles:

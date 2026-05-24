@@ -80,10 +80,16 @@ function humanStatus(status: Record<string, unknown>): string {
   const database = status.database;
   const counts = status.counts as Record<string, unknown> | undefined;
   const contextStates = status.contextStates as Record<string, unknown> | undefined;
+  const live = status.live as Record<string, unknown> | undefined;
 
   return [
     `database: ${String(database)}`,
     `storage: ${storage?.state ?? "unknown"}`,
+    `live poll interval: ${String(live?.pollIntervalMs ?? "unknown")}ms`,
+    `live sync: ${live?.syncSchedulerEnabled === false ? "disabled" : "scheduled"}${
+      live?.syncBeforePollEnabled === true ? " + forced-before-poll" : ""
+    }`,
+    `live sync interval: ${String(live?.syncIntervalMs ?? "unknown")}ms`,
     `conversations: ${String(counts?.conversations ?? 0)}`,
     `pending confirmations: ${String(counts?.pendingConfirmations ?? 0)}`,
     `blocked jobs: ${String(counts?.blockedJobs ?? 0)}`,

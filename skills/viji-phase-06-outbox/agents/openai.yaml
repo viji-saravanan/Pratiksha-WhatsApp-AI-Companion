@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 06 Outbox"
+  short_description: "Recipient confirmation and idempotent sends"
+  default_prompt: "Use $viji-phase-06-outbox to implement policy and recipient-confirmed outbound flow."

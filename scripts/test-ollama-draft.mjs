@@ -17,13 +17,13 @@ if (health.status !== "healthy") {
 }
 
 const prompt = buildDraftPrompt({
-  contactDisplayName: "Primary Recipient",
+  contactDisplayName: "Vijayalakshmi Saravanan",
   contextState: "fresh",
-  conversationSummary: "Primary recipient may ask for help finding documents or resources.",
+  conversationSummary: "Vijayalakshmi may ask for help finding documents or resources.",
   knowledgeSnippets: [
     {
       title: "Available registered resource",
-      body: "Registered filename: Primary_Recipient_Marksheet.pdf"
+      body: "Registered filename: Vijayalakshmi_Marksheet.pdf"
     }
   ],
   latestUserMessage: "Can I have my marksheet file?"

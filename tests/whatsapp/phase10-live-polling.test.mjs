@@ -64,7 +64,7 @@ function createPollingAdapter({
         return callFailure(chatsFailureCode, chatsFailureCode, metadata("chats.list"));
       }
       return callSuccess(
-        chats ?? [{ chatId: chatJid, name: "Primary Recipient", type: "dm" }],
+        chats ?? [{ chatId: chatJid, name: "Vijayalakshmi Saravanan", type: "dm" }],
         metadata("chats.list")
       );
     },
@@ -133,19 +133,19 @@ test("live allowlist poll stores inbound and from-me messages canonically in Pos
     try {
       const repositories = createRepositories(pool);
       const person = await repositories.contacts.createPerson({
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         notes: "Synthetic Phase 10 live poll person"
       });
       const contact = await repositories.contacts.createAllowlistedContact({
         ownerPersonId: person.personId,
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         waJid: chatJid,
         trustLevel: "trusted"
       });
       const channelAccount =
         await repositories.channelAccounts.createChannelAccount({
           label: "Phase 10 redacted live poll account",
-          storePath: "/data/pratiksha/wacli/store",
+          storePath: "/Volumes/Arya 1TB/VijiAI/wacli/store",
           state: "ready"
         });
 
@@ -205,7 +205,7 @@ test("live allowlist poll stores inbound and from-me messages canonically in Pos
   }
 });
 
-test("live allowlist poll reads Primary Recipient and Myself in the same cycle", async () => {
+test("live allowlist poll reads Vijayalakshmi and Myself in the same cycle", async () => {
   const postgres = await startDisposablePostgres({ prefix: "viji-phase10-dual" });
 
   try {
@@ -215,7 +215,7 @@ test("live allowlist poll reads Primary Recipient and Myself in the same cycle",
     try {
       const repositories = createRepositories(pool);
       const vijiPerson = await repositories.contacts.createPerson({
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         notes: "Synthetic Phase 10 primary contact"
       });
       const myselfPerson = await repositories.contacts.createPerson({
@@ -224,20 +224,20 @@ test("live allowlist poll reads Primary Recipient and Myself in the same cycle",
       });
       const vijiContact = await repositories.contacts.createAllowlistedContact({
         ownerPersonId: vijiPerson.personId,
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         waJid: "10000000001@s.whatsapp.net",
         trustLevel: "trusted"
       });
       const myselfContact = await repositories.contacts.createAllowlistedContact({
         ownerPersonId: myselfPerson.personId,
         displayName: "Myself",
-        waJid: "10000000000@s.whatsapp.net",
+        waJid: "10000000002@s.whatsapp.net",
         trustLevel: "trusted"
       });
       const channelAccount =
         await repositories.channelAccounts.createChannelAccount({
           label: "Phase 10 dual-contact live poll account",
-          storePath: "/data/pratiksha/wacli/store",
+          storePath: "/Volumes/Arya 1TB/VijiAI/wacli/store",
           state: "ready"
         });
 
@@ -297,7 +297,7 @@ test("live allowlist poll reads Primary Recipient and Myself in the same cycle",
       `);
       assert.deepEqual(messages.rows, [
         { displayName: "Myself", messageCount: 1 },
-        { displayName: "Primary Recipient", messageCount: 1 }
+        { displayName: "Vijayalakshmi Saravanan", messageCount: 1 }
       ]);
     } finally {
       await pool.end();
@@ -317,19 +317,19 @@ test("live allowlist poll skips broad direct chat results without an exact match
     try {
       const repositories = createRepositories(pool);
       const person = await repositories.contacts.createPerson({
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         notes: "Synthetic Phase 10 ambiguous chat person"
       });
       await repositories.contacts.createAllowlistedContact({
         ownerPersonId: person.personId,
-        displayName: "Primary Recipient",
+        displayName: "Vijayalakshmi Saravanan",
         phoneE164: "+10000000000",
         trustLevel: "trusted"
       });
       const channelAccount =
         await repositories.channelAccounts.createChannelAccount({
           label: "Phase 10 ambiguous live poll account",
-          storePath: "/data/pratiksha/wacli/store",
+          storePath: "/Volumes/Arya 1TB/VijiAI/wacli/store",
           state: "ready"
         });
 

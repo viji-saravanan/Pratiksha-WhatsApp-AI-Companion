@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 07 API CLI"
+  short_description: "Local API and CLI operator controls"
+  default_prompt: "Use $viji-phase-07-api-cli to expose safe local operations."

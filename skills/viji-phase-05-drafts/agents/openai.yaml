@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 05 Drafts"
+  short_description: "Deterministic draft generation flow"
+  default_prompt: "Use $viji-phase-05-drafts to build deterministic draft generation."

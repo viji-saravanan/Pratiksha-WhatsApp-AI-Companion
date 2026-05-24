@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Helper Dev"
+  short_description: "Follow Viji Helper dev rules"
+  default_prompt: "Use $viji-helper-dev before changing Viji Helper code."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 17 Trial"
+  short_description: "Controlled local trial and tuning"
+  default_prompt: "Use $viji-phase-17-trial to run the unattended trusted-contact trial."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 00 Foundation"
+  short_description: "SSD foundation and storage guard work"
+  default_prompt: "Use $viji-phase-00-foundation to complete or review Phase 0 foundation work."

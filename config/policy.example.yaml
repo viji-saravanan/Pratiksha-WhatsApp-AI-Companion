@@ -4,8 +4,8 @@ assistant_name: "Pratiksha"
 reply_prefix: "[Pratiksha]"
 allow_file_sharing: false
 allowed_contacts:
-  - display_name: "Primary Recipient"
+  - display_name: "Vijayalakshmi Saravanan"
     channel: "whatsapp_personal"
-  - display_name: "Test Sender"
+  - display_name: "Myself"
     channel: "whatsapp_personal"
     purpose: "local_test_only"

@@ -91,7 +91,7 @@ function getProxyDecision(method: string, upstreamPath: string): ProxyDecision {
         error: {
           code: ERROR_CODES.policy.recipientConfirmationRequired,
           message:
-            "Resource confirmation must arrive from the trusted recipient in WhatsApp. The dashboard can inspect or deny only."
+            "Resource confirmation must arrive from Vijayalakshmi in WhatsApp. The dashboard can inspect or deny only."
         }
       }
     };
@@ -225,7 +225,7 @@ function serveMetrics(response: ServerResponse): void {
     renderPrometheusMetrics([
       {
         name: "viji_dashboard_up",
-        help: "Pratiksha dashboard process is responding to metrics scrapes.",
+        help: "Viji dashboard process is responding to metrics scrapes.",
         type: "gauge",
         value: 1
       }
@@ -320,6 +320,6 @@ export function createDashboardServer(
 if (isDirectNodeEntrypoint(import.meta.url)) {
   const config = getDashboardConfigFromEnv();
   createDashboardServer(config).listen(config.port, config.host, () => {
-    console.log(`Pratiksha dashboard listening on http://${config.host}:${config.port}`);
+    console.log(`Viji dashboard listening on http://${config.host}:${config.port}`);
   });
 }

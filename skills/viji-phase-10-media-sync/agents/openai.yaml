@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 10 Media Sync"
+  short_description: "Quota-controlled allowlisted media sync"
+  default_prompt: "Use $viji-phase-10-media-sync to implement safe media downloads."

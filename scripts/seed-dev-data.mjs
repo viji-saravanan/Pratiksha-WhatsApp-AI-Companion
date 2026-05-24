@@ -1,6 +1,6 @@
 import { runSql } from "./lib/psql-runner.mjs";
 
-const dataRoot = process.env.VIJI_DATA_ROOT || "/data/pratiksha";
+const dataRoot = process.env.VIJI_DATA_ROOT || "/Volumes/Arya 1TB/VijiAI";
 const wacliStore = process.env.VIJI_WACLI_STORE || `${dataRoot}/wacli/store`;
 
 function sqlString(value) {
@@ -31,7 +31,7 @@ function deriveWaJidFromPhone(phoneE164) {
 
 function vijiAllowlistSeed() {
   const displayName =
-    optionalEnv("VIJI_ALLOWLIST_VIJI_DISPLAY_NAME") || "Primary Recipient";
+    optionalEnv("VIJI_ALLOWLIST_VIJI_DISPLAY_NAME") || "Vijayalakshmi Saravanan";
   const phoneE164 = optionalEnv("VIJI_ALLOWLIST_VIJI_PHONE_E164");
   const waJid =
     optionalEnv("VIJI_ALLOWLIST_VIJI_WA_JID") || deriveWaJidFromPhone(phoneE164);

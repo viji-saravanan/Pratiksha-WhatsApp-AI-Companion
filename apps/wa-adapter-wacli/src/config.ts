@@ -7,6 +7,7 @@ export interface WacliAdapterConfig {
   markReadTimeout: string;
   storePath: string;
   timeout: string;
+  syncTimeout: string;
   liveSmokeEnabled: boolean;
   liveReadSmokeEnabled: boolean;
   liveReadSmokeQuery: string;
@@ -31,10 +32,11 @@ export function getWacliAdapterConfig(
     markReadTimeout: env.VIJI_WACLI_MARK_READ_TIMEOUT || "5s",
     storePath: paths.wacliStore,
     timeout: env.VIJI_WACLI_TIMEOUT || "30s",
+    syncTimeout: env.VIJI_WACLI_SYNC_TIMEOUT || "75s",
     liveSmokeEnabled: env.VIJI_WACLI_LIVE_SMOKE_ENABLED === "true",
     liveReadSmokeEnabled: env.VIJI_WACLI_LIVE_READ_SMOKE_ENABLED === "true",
     liveReadSmokeQuery:
-      env.VIJI_WACLI_LIVE_READ_SMOKE_QUERY || "Primary Recipient",
+      env.VIJI_WACLI_LIVE_READ_SMOKE_QUERY || "Vijayalakshmi Saravanan",
     liveReadSmokeChatLimit: positiveInteger(
       env.VIJI_WACLI_LIVE_READ_SMOKE_CHAT_LIMIT,
       5

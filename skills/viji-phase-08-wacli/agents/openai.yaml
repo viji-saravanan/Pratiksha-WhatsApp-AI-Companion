@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 08 wacli"
+  short_description: "wacli hardening and live smoke checks"
+  default_prompt: "Use $viji-phase-08-wacli to harden the live WhatsApp adapter."

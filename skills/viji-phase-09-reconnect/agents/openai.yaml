@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 09 Reconnect"
+  short_description: "Reconnect recovery and backfill"
+  default_prompt: "Use $viji-phase-09-reconnect to implement context recovery."

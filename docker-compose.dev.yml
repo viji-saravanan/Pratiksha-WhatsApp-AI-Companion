@@ -1,0 +1,12 @@
+name: viji-helper-dev
+
+services:
+  storage-guard:
+    environment:
+      VIJI_DATA_ROOT: ${VIJI_DATA_ROOT:-/Volumes/Arya 1TB/VijiAI}
+      VIJI_STORAGE_PROFILE: ${VIJI_STORAGE_PROFILE:-large-200gb}
+      VIJI_SENTINEL_FILE: ${VIJI_SENTINEL_FILE:-.viji-helper-root}
+
+  llm-proxy:
+    environment:
+      VIJI_OLLAMA_BASE_URL: ${VIJI_OLLAMA_DOCKER_BASE_URL:-http://host.docker.internal:11434}

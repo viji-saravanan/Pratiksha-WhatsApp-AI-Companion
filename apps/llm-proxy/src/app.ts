@@ -186,7 +186,7 @@ async function handleRoute(
 }
 
 export function createLlmProxyServer(options: LlmProxyAppOptions = {}): Server {
-  const token = options.token || options.env?.VIJI_LLM_PROXY_TOKEN || "change-me-llm-token";
+  const token = options.token || options.env?.VIJI_LLM_PROXY_TOKEN || "local-llm-token";
 
   return createServer(async (request, response) => {
     const correlationId =
@@ -204,7 +204,7 @@ export function createLlmProxyServer(options: LlmProxyAppOptions = {}): Server {
           renderPrometheusMetrics([
             {
               name: "viji_llm_proxy_up",
-              help: "Pratiksha LLM proxy process is responding to metrics scrapes.",
+              help: "Viji LLM proxy process is responding to metrics scrapes.",
               type: "gauge",
               value: 1
             },

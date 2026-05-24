@@ -8,8 +8,8 @@ import {
 } from "../helpers/disposable-postgres.mjs";
 import {
   countRows,
-  createPrimaryRecipientFixtureHarness
-} from "../helpers/redacted-primary-recipient-fixture.mjs";
+  createVijayalakshmiFixtureHarness
+} from "../helpers/redacted-vijayalakshmi-fixture.mjs";
 
 const build = run("corepack", ["pnpm", "--filter", "@viji/worker", "build"]);
 assertSuccess(build, "build @viji/worker");
@@ -50,6 +50,7 @@ const liveEnv = {
   VIJI_DEFAULT_REPLY_MODE: "auto",
   VIJI_LLM_PROVIDER: "deterministic",
   VIJI_TEST_LLM_MODEL: "deterministic-test-llm",
+  VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED: "false",
   VIJI_LIVE_AUTOMATION_BATCH_LIMIT: "10",
   VIJI_LIVE_DISPATCH_LIMIT_PER_CYCLE: "5"
 };
@@ -63,7 +64,7 @@ test("Phase 17 live automation drafts, queues, dispatches, and does not duplicat
 
     try {
       const repositories = createRepositories(pool);
-      const harness = await createPrimaryRecipientFixtureHarness(repositories);
+      const harness = await createVijayalakshmiFixtureHarness(repositories);
       await harness.createInboundMessage({
         externalMessageId: "wamid.redacted.phase17-live-text",
         body: "Can you help me with the appointment time?",
@@ -93,7 +94,7 @@ test("Phase 17 live automation drafts, queues, dispatches, and does not duplicat
       });
 
       assert.equal(first.draftsCreated, 1);
-      assert.equal(first.syncStatus, "completed");
+      assert.equal(first.syncStatus, "skipped");
       assert.equal(first.textJobsQueued, 1);
       assert.equal(first.jobsDispatched, 1);
       assert.equal(second.messagesConsidered, 0);
@@ -118,7 +119,7 @@ test("Phase 17 live automation refreshes wacli before polling cached chats", asy
 
     try {
       const repositories = createRepositories(pool);
-      const harness = await createPrimaryRecipientFixtureHarness(repositories);
+      const harness = await createVijayalakshmiFixtureHarness(repositories);
       const calls = [];
       const metadata = { component: "test-whatsapp-adapter", operation: "test" };
       const adapter = {
@@ -159,6 +160,7 @@ test("Phase 17 live automation refreshes wacli before polling cached chats", asy
         llmClient: createDeterministicTestLlmClient(),
         env: {
           ...liveEnv,
+          VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED: "true",
           VIJI_LIVE_SYNC_IDLE_EXIT: "3s",
           VIJI_LIVE_SYNC_REFRESH_CONTACTS: "true"
         },
@@ -196,7 +198,7 @@ test("Phase 17 live automation skips stale-cache polling when live sync fails", 
 
     try {
       const repositories = createRepositories(pool);
-      const harness = await createPrimaryRecipientFixtureHarness(repositories);
+      const harness = await createVijayalakshmiFixtureHarness(repositories);
       const metadata = { component: "test-whatsapp-adapter", operation: "sync" };
       const adapter = {
         doctor: async () => callSuccess({}, metadata),
@@ -221,7 +223,10 @@ test("Phase 17 live automation skips stale-cache polling when live sync fails", 
         adapter,
         dispatcher: createRecordedOutboundDispatcher(),
         llmClient: createDeterministicTestLlmClient(),
-        env: liveEnv,
+        env: {
+          ...liveEnv,
+          VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED: "true"
+        },
         automationLimit: 10,
         dispatchLimit: 5,
         now: new Date("2026-05-01T10:01:00.000Z")
@@ -249,23 +254,23 @@ test("Phase 17 live automation handles file suggestion and recipient list-number
 
     try {
       const repositories = createRepositories(pool);
-      const harness = await createPrimaryRecipientFixtureHarness(repositories);
+      const harness = await createVijayalakshmiFixtureHarness(repositories);
       await repositories.resources.registerFileResource({
-        storageUri: "/data/pratiksha/viji-files/library/recipient_10_marksheet.pdf",
+        storageUri: "/Volumes/Arya 1TB/VijiAI/viji-files/library/viji_10_marksheet.pdf",
         checksumSha256: "a".repeat(64),
         mimeType: "application/pdf",
         sizeBytes: 1024,
-        registeredFileName: "recipient_10_marksheet.pdf",
-        title: "Recipient 10th marksheet",
+        registeredFileName: "viji_10_marksheet.pdf",
+        title: "Viji 10th marksheet",
         aliases: ["10th marksheet", "mark sheet"]
       });
       await repositories.resources.registerFileResource({
-        storageUri: "/data/pratiksha/viji-files/library/recipient_12_marksheet.pdf",
+        storageUri: "/Volumes/Arya 1TB/VijiAI/viji-files/library/viji_12_marksheet.pdf",
         checksumSha256: "b".repeat(64),
         mimeType: "application/pdf",
         sizeBytes: 1024,
-        registeredFileName: "recipient_12_marksheet.pdf",
-        title: "Recipient 12th marksheet",
+        registeredFileName: "viji_12_marksheet.pdf",
+        title: "Viji 12th marksheet",
         aliases: ["12th marksheet", "mark sheet"]
       });
       const request = await harness.createInboundMessage({

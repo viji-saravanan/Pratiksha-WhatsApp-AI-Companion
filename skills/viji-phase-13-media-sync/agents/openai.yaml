@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 13 Media Sync"
+  short_description: "Allowlisted media sync and reuse"
+  default_prompt: "Use $viji-phase-13-media-sync to implement guarded allowlisted media downloads and received-media reuse."

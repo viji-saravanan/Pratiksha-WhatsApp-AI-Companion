@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 04 Policy"
+  short_description: "Reply safety gates and modes"
+  default_prompt: "Use $viji-phase-04-policy to implement reply safety policy."

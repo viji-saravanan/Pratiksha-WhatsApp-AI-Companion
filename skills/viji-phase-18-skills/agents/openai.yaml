@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 18 Skills"
+  short_description: "Maintain project Codex skills"
+  default_prompt: "Use $viji-phase-18-skills to update this skill pack."

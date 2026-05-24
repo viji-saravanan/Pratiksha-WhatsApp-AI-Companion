@@ -9,7 +9,7 @@ import { pgDumpInvocation, spawnProcess, runSync, assertSyncSuccess } from "./li
 const args = new Set(process.argv.slice(2));
 const jsonOutput = args.has("--json");
 const forceStorageWarning = args.has("--force-storage-warning");
-const dataRoot = process.env.VIJI_DATA_ROOT || "/data/pratiksha";
+const dataRoot = process.env.VIJI_DATA_ROOT || "/Volumes/Arya 1TB/VijiAI";
 const backupDir = process.env.VIJI_PGBACKUP_DIR || join(dataRoot, "pgbackups");
 
 function timestampForFile(date = new Date()) {

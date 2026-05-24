@@ -11,7 +11,7 @@ import {
 
 const args = process.argv.slice(2);
 const jsonOutput = args.includes("--json");
-const dataRoot = process.env.VIJI_DATA_ROOT || "/data/pratiksha";
+const dataRoot = process.env.VIJI_DATA_ROOT || "/Volumes/Arya 1TB/VijiAI";
 const backupDir = process.env.VIJI_PGBACKUP_DIR || join(dataRoot, "pgbackups");
 const image = process.env.VIJI_TEST_POSTGRES_IMAGE || "pgvector/pgvector:pg16";
 

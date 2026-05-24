@@ -293,6 +293,7 @@ async function buildDashboardSummary(
       defaultReplyMode: options.env?.VIJI_DEFAULT_REPLY_MODE ?? "auto",
       autoReplyEnabled: options.env?.VIJI_AUTO_REPLY_ENABLED === "true",
       liveSendEnabled: options.env?.VIJI_WACLI_LIVE_SEND_ENABLED === "true",
+      liveSync: buildLiveRuntimeStatus(options.env),
       liveReadSmokeEnabled:
         options.env?.VIJI_WACLI_LIVE_READ_SMOKE_ENABLED === "true",
       liveRecoverySmokeEnabled:
@@ -315,6 +316,28 @@ async function getDatabaseHealth(db: DbExecutor): Promise<"healthy" | "unavailab
   }
 }
 
+function numberFromEnv(
+  env: NodeJS.ProcessEnv | undefined,
+  name: string,
+  fallback: number
+): number {
+  const parsed = Number(env?.[name]);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function buildLiveRuntimeStatus(env: NodeJS.ProcessEnv | undefined): Record<string, unknown> {
+  return {
+    pollIntervalMs: numberFromEnv(env, "VIJI_LIVE_POLL_INTERVAL_MS", 1000),
+    syncBeforePollEnabled: env?.VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED === "true",
+    syncSchedulerEnabled: env?.VIJI_LIVE_SYNC_SCHEDULER_ENABLED !== "false",
+    startupSyncEnabled: env?.VIJI_LIVE_STARTUP_SYNC_ENABLED !== "false",
+    syncIntervalMs: numberFromEnv(env, "VIJI_LIVE_SYNC_INTERVAL_MS", 60_000),
+    syncRetryMinMs: numberFromEnv(env, "VIJI_LIVE_SYNC_RETRY_MIN_MS", 15_000),
+    syncRetryMaxMs: numberFromEnv(env, "VIJI_LIVE_SYNC_RETRY_MAX_MS", 300_000),
+    syncIdleExit: env?.VIJI_LIVE_SYNC_IDLE_EXIT ?? "12s"
+  };
+}
+
 async function buildStatus(options: ApiAppOptions): Promise<Record<string, unknown>> {
   const repositories = createRepositories(options.db);
   const [database, storage] = await Promise.all([
@@ -330,6 +353,7 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
         defaultMode: options.env?.VIJI_DEFAULT_REPLY_MODE ?? "auto",
         policies: []
       },
+      live: buildLiveRuntimeStatus(options.env),
       counts: {
         conversations: 0,
         pendingConfirmations: 0,
@@ -371,6 +395,7 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
       defaultMode: options.env?.VIJI_DEFAULT_REPLY_MODE ?? "auto",
       policies
     },
+    live: buildLiveRuntimeStatus(options.env),
     counts: {
       conversations: conversations.length,
       pendingConfirmations: pendingConfirmations.length,
@@ -394,12 +419,13 @@ async function buildMetrics(options: ApiAppOptions): Promise<string> {
   const storage = status.storage as { state?: string; usedBytes?: number; freeBytes?: number } | undefined;
   const counts = status.counts as Record<string, unknown> | undefined;
   const contextStates = status.contextStates as Record<string, unknown> | undefined;
+  const live = status.live as Record<string, unknown> | undefined;
   const database = String(status.database ?? "unknown");
   const storageState = storage?.state ?? "unknown";
   const samples: PrometheusMetricSample[] = [
     {
       name: "viji_api_up",
-      help: "Pratiksha API process is responding to metrics scrapes.",
+      help: "Viji API process is responding to metrics scrapes.",
       type: "gauge",
       value: 1
     },
@@ -419,13 +445,13 @@ async function buildMetrics(options: ApiAppOptions): Promise<string> {
     },
     {
       name: "viji_storage_used_bytes",
-      help: "Bytes currently used under the Pratiksha data root.",
+      help: "Bytes currently used under the Viji data root.",
       type: "gauge",
       value: Number(storage?.usedBytes ?? 0)
     },
     {
       name: "viji_storage_free_bytes",
-      help: "Bytes available on the filesystem that hosts the Pratiksha data root.",
+      help: "Bytes available on the filesystem that hosts the Viji data root.",
       type: "gauge",
       value: Number(storage?.freeBytes ?? 0)
     },
@@ -458,6 +484,30 @@ async function buildMetrics(options: ApiAppOptions): Promise<string> {
       help: "Count of queued, running, or paused backfill jobs.",
       type: "gauge",
       value: numberField(counts ?? {}, "activeBackfillJobs")
+    },
+    {
+      name: "viji_live_poll_interval_ms",
+      help: "Configured target live worker poll interval in milliseconds.",
+      type: "gauge",
+      value: numberField(live ?? {}, "pollIntervalMs")
+    },
+    {
+      name: "viji_live_sync_interval_ms",
+      help: "Configured scheduled adapter sync interval in milliseconds.",
+      type: "gauge",
+      value: numberField(live ?? {}, "syncIntervalMs")
+    },
+    {
+      name: "viji_live_sync_scheduler_enabled",
+      help: "Whether scheduled live sync is enabled.",
+      type: "gauge",
+      value: live?.syncSchedulerEnabled === false ? 0 : 1
+    },
+    {
+      name: "viji_live_sync_before_poll_enabled",
+      help: "Whether every live poll cycle forces a pre-poll adapter sync.",
+      type: "gauge",
+      value: live?.syncBeforePollEnabled === true ? 1 : 0
     }
   ];
 
@@ -764,7 +814,7 @@ async function handleRoute(
 }
 
 export function createApiServer(options: ApiAppOptions): Server {
-  const token = options.token || options.env?.VIJI_API_TOKEN || "change-me-api-token";
+  const token = options.token || options.env?.VIJI_API_TOKEN || "local-dev-token";
 
   return createServer(async (request, response) => {
     const correlationId =

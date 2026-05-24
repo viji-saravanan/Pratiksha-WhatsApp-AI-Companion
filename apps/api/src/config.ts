@@ -8,6 +8,6 @@ export function getApiConfigFromEnv(env: NodeJS.ProcessEnv = process.env): ApiCo
   return {
     host: env.VIJI_API_HOST || "127.0.0.1",
     port: Number(env.VIJI_API_PORT || 8787),
-    token: env.VIJI_API_TOKEN || "change-me-api-token"
+    token: env.VIJI_API_TOKEN || "local-dev-token"
   };
 }

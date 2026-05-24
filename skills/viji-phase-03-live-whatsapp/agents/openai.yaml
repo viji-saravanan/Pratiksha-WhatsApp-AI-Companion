@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 03 Live WhatsApp"
+  short_description: "Live wacli adapter contract"
+  default_prompt: "Use $viji-phase-03-live-whatsapp to build the live WhatsApp adapter contract."

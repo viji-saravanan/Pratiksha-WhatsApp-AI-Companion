@@ -468,7 +468,7 @@ function resourceFileName(media: MessageMediaPromotionRecord): string {
 function mediaResourceSummary(media: MessageMediaPromotionRecord): string {
   const receivedAt = media.receivedAt?.toISOString() ?? "unknown date";
   const parts = [
-    `WhatsApp ${media.mimeType} received from the trusted recipient on ${receivedAt}.`,
+    `WhatsApp ${media.mimeType} received from Vijayalakshmi on ${receivedAt}.`,
     media.fileName ? `Original filename: ${media.fileName}.` : "",
     media.messageBody ? `Caption: ${media.messageBody.slice(0, 500)}` : ""
   ].filter(Boolean);
@@ -508,7 +508,7 @@ export async function promoteDownloadedMessageMediaToResource(
       media.mimeType,
       media.messageBody ?? ""
     ].filter((value) => value.trim().length > 0),
-    description: "Previously received WhatsApp media from the trusted recipient.",
+    description: "Previously received WhatsApp media from Vijayalakshmi.",
     contentSummary: mediaResourceSummary(media),
     allowedContactIds: media.senderContactId ? [media.senderContactId] : null,
     requiresRecipientConfirmation: true,

@@ -39,12 +39,12 @@ export function getDashboardConfigFromEnv(
     host: env.VIJI_DASHBOARD_HOST || "127.0.0.1",
     port: Number(env.VIJI_DASHBOARD_PORT || 8788),
     apiBaseUrl: env.VIJI_DASHBOARD_API_BASE_URL || env.VIJI_API_BASE_URL || "http://127.0.0.1:8787",
-    apiToken: env.VIJI_API_TOKEN || "change-me-api-token",
+    apiToken: env.VIJI_API_TOKEN || "local-dev-token",
     containerLogs: getContainerLogsConfigFromEnv(env),
     upload: {
       resourceRoot:
         env.VIJI_RESOURCE_ROOT ||
-        join(env.VIJI_DATA_ROOT || "/data/pratiksha", "viji-files"),
+        join(env.VIJI_DATA_ROOT || "/Volumes/Arya 1TB/VijiAI", "viji-files"),
       maxBytes: parseInteger(env.VIJI_DASHBOARD_UPLOAD_MAX_BYTES, 52_428_800, 1, 524_288_000)
     }
   };

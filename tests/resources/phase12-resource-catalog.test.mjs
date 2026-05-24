@@ -8,8 +8,8 @@ import {
 } from "../helpers/disposable-postgres.mjs";
 import {
   countRows,
-  createPrimaryRecipientFixtureHarness
-} from "../helpers/redacted-primary-recipient-fixture.mjs";
+  createVijayalakshmiFixtureHarness
+} from "../helpers/redacted-vijayalakshmi-fixture.mjs";
 
 const build = run("corepack", ["pnpm", "--filter", "@viji/worker", "build"]);
 assertSuccess(build, "build @viji/worker");
@@ -42,27 +42,27 @@ async function addConfirmationMessage(repositories, harness, proposal, body, id)
 
 async function seedMarksheetResources(repositories, contactId) {
   await repositories.resources.registerFileResource({
-    storageUri: "/data/pratiksha/viji-files/recipient_10_marksheet.pdf",
+    storageUri: "/Volumes/Arya 1TB/VijiAI/viji-files/viji_10_marksheet.pdf",
     checksumSha256: "sha256-phase12-10",
     mimeType: "application/pdf",
     sizeBytes: 1024,
-    registeredFileName: "recipient_10_marksheet.pdf",
-    title: "Recipient 10th marksheet",
+    registeredFileName: "viji_10_marksheet.pdf",
+    title: "Viji 10th marksheet",
     aliases: ["10th marksheet", "class 10 marksheet", "tenth marksheet"],
-    description: "Primary Recipient's 10th standard marksheet PDF.",
-    contentSummary: "10th standard marksheet for Primary Recipient.",
+    description: "Vijayalakshmi's 10th standard marksheet PDF.",
+    contentSummary: "10th standard marksheet for Vijayalakshmi.",
     allowedContactIds: [contactId]
   });
   await repositories.resources.registerFileResource({
-    storageUri: "/data/pratiksha/viji-files/recipient_12_marksheet.pdf",
+    storageUri: "/Volumes/Arya 1TB/VijiAI/viji-files/viji_12_marksheet.pdf",
     checksumSha256: "sha256-phase12-12",
     mimeType: "application/pdf",
     sizeBytes: 2048,
-    registeredFileName: "recipient_12_marksheet.pdf",
-    title: "Recipient 12th marksheet",
+    registeredFileName: "viji_12_marksheet.pdf",
+    title: "Viji 12th marksheet",
     aliases: ["12th marksheet", "class 12 marksheet", "twelfth marksheet"],
-    description: "Primary Recipient's 12th standard marksheet PDF.",
-    contentSummary: "12th standard marksheet for Primary Recipient.",
+    description: "Vijayalakshmi's 12th standard marksheet PDF.",
+    contentSummary: "12th standard marksheet for Vijayalakshmi.",
     allowedContactIds: [contactId]
   });
 }
@@ -76,7 +76,7 @@ test("resource catalog suggests similar filenames and accepts list-number confir
 
     try {
       const repositories = createRepositories(pool);
-      const harness = await createPrimaryRecipientFixtureHarness(repositories);
+      const harness = await createVijayalakshmiFixtureHarness(repositories);
       await seedMarksheetResources(repositories, harness.contact.contactId);
       const inbound = await harness.createInboundMessage({
         externalMessageId: "wamid.redacted.vijayalakshmi.phase12-marksheet",
@@ -90,8 +90,8 @@ test("resource catalog suggests similar filenames and accepts list-number confir
 
       assert.equal(proposal.status, "suggested");
       assert.match(proposal.draft.body, /Do you mean:/);
-      assert.match(proposal.draft.body, /1\. recipient_10_marksheet\.pdf/);
-      assert.match(proposal.draft.body, /2\. recipient_12_marksheet\.pdf/);
+      assert.match(proposal.draft.body, /1\. viji_10_marksheet\.pdf/);
+      assert.match(proposal.draft.body, /2\. viji_12_marksheet\.pdf/);
 
       const ambiguous = await addConfirmationMessage(
         repositories,
@@ -123,7 +123,7 @@ test("resource catalog suggests similar filenames and accepts list-number confir
 
       assert.equal(confirmed.status, "queued");
       assert.equal(confirmed.queueStatus, "inserted");
-      assert.equal(confirmed.job.payload.registeredFileName, "recipient_12_marksheet.pdf");
+      assert.equal(confirmed.job.payload.registeredFileName, "viji_12_marksheet.pdf");
     } finally {
       await pool.end();
     }
@@ -143,7 +143,7 @@ test("resource catalog accepts descriptive confirmation such as 12th marksheet",
 
     try {
       const repositories = createRepositories(pool);
-      const harness = await createPrimaryRecipientFixtureHarness(repositories);
+      const harness = await createVijayalakshmiFixtureHarness(repositories);
       await seedMarksheetResources(repositories, harness.contact.contactId);
       const inbound = await harness.createInboundMessage({
         externalMessageId: "wamid.redacted.vijayalakshmi.phase12-description",
@@ -170,7 +170,7 @@ test("resource catalog accepts descriptive confirmation such as 12th marksheet",
       });
 
       assert.equal(confirmed.status, "queued");
-      assert.equal(confirmed.job.payload.registeredFileName, "recipient_12_marksheet.pdf");
+      assert.equal(confirmed.job.payload.registeredFileName, "viji_12_marksheet.pdf");
     } finally {
       await pool.end();
     }
@@ -190,17 +190,17 @@ test("single-option resource prompt accepts yes after the text-reply freshness w
 
     try {
       const repositories = createRepositories(pool);
-      const harness = await createPrimaryRecipientFixtureHarness(repositories);
+      const harness = await createVijayalakshmiFixtureHarness(repositories);
       await repositories.resources.registerFileResource({
-        storageUri: "/data/pratiksha/viji-files/recipient_marksheets.pdf",
+        storageUri: "/Volumes/Arya 1TB/VijiAI/viji-files/viji_marksheets.pdf",
         checksumSha256: "sha256-phase12-single-marksheets",
         mimeType: "application/pdf",
         sizeBytes: 4096,
-        registeredFileName: "recipient_marksheets.pdf",
-        title: "Recipient marksheets",
+        registeredFileName: "viji_marksheets.pdf",
+        title: "Viji marksheets",
         aliases: ["marksheet", "marksheets"],
-        description: "Combined marksheets for Primary Recipient.",
-        contentSummary: "Primary Recipient marksheets PDF.",
+        description: "Combined marksheets for Vijayalakshmi.",
+        contentSummary: "Vijayalakshmi marksheets PDF.",
         allowedContactIds: [harness.contact.contactId]
       });
       const inbound = await harness.createInboundMessage({
@@ -214,7 +214,7 @@ test("single-option resource prompt accepts yes after the text-reply freshness w
         now: new Date("2026-05-01T10:01:00.000Z")
       });
       assert.equal(proposal.status, "suggested");
-      assert.match(proposal.draft.body, /Do you mean recipient_marksheets\.pdf\?/);
+      assert.match(proposal.draft.body, /Do you mean viji_marksheets\.pdf\?/);
 
       const confirmation = await addConfirmationMessage(
         repositories,
@@ -231,7 +231,7 @@ test("single-option resource prompt accepts yes after the text-reply freshness w
 
       assert.equal(confirmed.status, "queued");
       assert.equal(confirmed.queueStatus, "inserted");
-      assert.equal(confirmed.job.payload.registeredFileName, "recipient_marksheets.pdf");
+      assert.equal(confirmed.job.payload.registeredFileName, "viji_marksheets.pdf");
     } finally {
       await pool.end();
     }

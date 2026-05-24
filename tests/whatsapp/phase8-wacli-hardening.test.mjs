@@ -86,11 +86,12 @@ function createRoutingRunner(routes) {
 function testConfig(overrides = {}) {
   return {
     bin: "wacli",
-    storePath: "/data/pratiksha/wacli/store",
+    storePath: "/Volumes/Arya 1TB/VijiAI/wacli/store",
     timeout: "30s",
+    syncTimeout: "75s",
     liveSmokeEnabled: false,
     liveReadSmokeEnabled: false,
-    liveReadSmokeQuery: "Primary Recipient",
+    liveReadSmokeQuery: "Vijayalakshmi Saravanan",
     liveReadSmokeChatLimit: 5,
     liveReadSmokeMessageLimit: 5,
     markReadBin: "wacli-mark-read",
@@ -122,7 +123,7 @@ async function readSourceTree(directory) {
 
 test("Phase 8 fixture parsers normalize wacli command outputs", () => {
   const doctor = parseWacliDoctor(fixture("doctor-ok-redacted.json"));
-  assert.equal(doctor.storeDir, "/data/pratiksha/wacli/store");
+  assert.equal(doctor.storeDir, "/Volumes/Arya 1TB/VijiAI/wacli/store");
   assert.equal(doctor.authenticated, true);
   assert.equal(doctor.connected, true);
   assert.equal(doctor.lockHeld, false);
@@ -150,7 +151,7 @@ test("Phase 8 fixture parsers normalize wacli command outputs", () => {
   const messages = parseWacliMessages(fixture("messages-search-redacted.json"));
   assert.equal(messages.rejected.length, 0);
   assert.equal(messages.messages.length, 1);
-  assert.equal(messages.messages[0].senderDisplayName, "Primary Recipient");
+  assert.equal(messages.messages[0].senderDisplayName, "Vijayalakshmi Saravanan");
 
   const liveShapeMessages = parseWacliMessages(
     fixture("messages-list-live-shape-redacted.json")
@@ -257,7 +258,7 @@ test("typed wacli wrappers build live command shapes and gate sends", async () =
       "doctor",
       "--json",
       "--store",
-      "/data/pratiksha/wacli/store",
+      "/Volumes/Arya 1TB/VijiAI/wacli/store",
       "--timeout",
       "30s"
     ]
@@ -290,7 +291,7 @@ test("typed wacli wrappers build live command shapes and gate sends", async () =
     "Synthetic live-send shape only.",
     "--json",
     "--store",
-    "/data/pratiksha/wacli/store",
+    "/Volumes/Arya 1TB/VijiAI/wacli/store",
     "--timeout",
     "30s"
   ]);
@@ -301,7 +302,7 @@ test("typed wacli wrappers build live command shapes and gate sends", async () =
     liveFile.runner
   ).sendFile({
     to: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
-    filePath: "/data/pratiksha/viji-files/library/redacted.pdf",
+    filePath: "/Volumes/Arya 1TB/VijiAI/viji-files/library/redacted.pdf",
     filename: "redacted.pdf",
     caption: "Synthetic caption.",
     mime: "application/pdf"
@@ -313,7 +314,7 @@ test("typed wacli wrappers build live command shapes and gate sends", async () =
     "--to",
     "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
     "--file",
-    "/data/pratiksha/viji-files/library/redacted.pdf",
+    "/Volumes/Arya 1TB/VijiAI/viji-files/library/redacted.pdf",
     "--caption",
     "Synthetic caption.",
     "--filename",
@@ -322,7 +323,7 @@ test("typed wacli wrappers build live command shapes and gate sends", async () =
     "application/pdf",
     "--json",
     "--store",
-    "/data/pratiksha/wacli/store",
+    "/Volumes/Arya 1TB/VijiAI/wacli/store",
     "--timeout",
     "30s"
   ]);
@@ -371,7 +372,7 @@ test("typed wacli wrappers build live command shapes and gate sends", async () =
     "2026-05-01T10:06:00.000Z",
     "--json",
     "--store",
-    "/data/pratiksha/wacli/store",
+    "/Volumes/Arya 1TB/VijiAI/wacli/store",
     "--timeout",
     "5s"
   ]);
@@ -413,17 +414,18 @@ test("typed wacli wrappers cover auth, sync, chat, message, and media commands",
     "--json",
     "--store"
   ]);
+  assert.deepEqual(syncOnce.calls[0].args.slice(-2), ["--timeout", "75s"]);
 
   const chats = createRunner(fixture("chats-list-redacted.json"));
   await createWacliClient(testConfig(), chats.runner).listChats({
-    query: "Primary Recipient",
+    query: "Vijayalakshmi",
     limit: 5
   });
   assert.deepEqual(chats.calls[0].args.slice(0, 6), [
     "chats",
     "list",
     "--query",
-    "Primary Recipient",
+    "Vijayalakshmi",
     "--limit",
     "5"
   ]);
@@ -451,7 +453,7 @@ test("typed wacli wrappers cover auth, sync, chat, message, and media commands",
   await createWacliClient(testConfig(), media.runner).downloadMedia({
     chatId: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
     messageId: "wamid.redacted.vijayalakshmi.media.0001",
-    output: "/data/pratiksha/wacli/media"
+    output: "/Volumes/Arya 1TB/VijiAI/wacli/media"
   });
   assert.deepEqual(media.calls[0].args.slice(0, 8), [
     "media",
@@ -461,7 +463,7 @@ test("typed wacli wrappers cover auth, sync, chat, message, and media commands",
     "--id",
     "wamid.redacted.vijayalakshmi.media.0001",
     "--output",
-    "/data/pratiksha/wacli/media"
+    "/Volumes/Arya 1TB/VijiAI/wacli/media"
   ]);
 });
 
@@ -503,7 +505,7 @@ test("live read smoke is opt-in and returns only redacted chat/message summary",
     {
       ...process.env,
       VIJI_WACLI_LIVE_READ_SMOKE_ENABLED: "true",
-      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Primary Recipient",
+      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Vijayalakshmi Saravanan",
       VIJI_WACLI_LIVE_READ_SMOKE_CHAT_LIMIT: "5",
       VIJI_WACLI_LIVE_READ_SMOKE_MESSAGE_LIMIT: "5"
     },
@@ -534,7 +536,7 @@ test("live read smoke is opt-in and returns only redacted chat/message summary",
     {
       ...process.env,
       VIJI_WACLI_LIVE_READ_SMOKE_ENABLED: "true",
-      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Primary Recipient"
+      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Vijayalakshmi Saravanan"
     },
     (config) => createWacliClient(config, malformed.runner)
   );

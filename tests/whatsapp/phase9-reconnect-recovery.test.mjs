@@ -33,7 +33,7 @@ const {
   runLiveRecoverySmokeFromEnv
 } = await import("../../apps/wa-adapter-wacli/dist/index.js");
 
-const token = "test-recovery-token";
+const token = "phase9-test-token";
 const chatJid = "vijayalakshmi.saravanan.redacted@s.whatsapp.net";
 
 function fixture(name) {
@@ -161,25 +161,25 @@ async function apiJson(baseUrl, path) {
 
 async function createFixtureConversation(repositories, contextState = "stale") {
   const person = await repositories.contacts.createPerson({
-    displayName: "Primary Recipient",
+    displayName: "Vijayalakshmi Saravanan",
     notes: "Synthetic Phase 9 recovery person"
   });
   const contact = await repositories.contacts.createAllowlistedContact({
     ownerPersonId: person.personId,
-    displayName: "Primary Recipient",
+    displayName: "Vijayalakshmi Saravanan",
     waJid: chatJid,
     trustLevel: "trusted"
   });
   const channelAccount = await repositories.channelAccounts.createChannelAccount({
     label: "Phase 9 redacted wacli fixture account",
-    storePath: "/data/pratiksha/wacli/store",
+    storePath: "/Volumes/Arya 1TB/VijiAI/wacli/store",
     state: "ready"
   });
   const conversation = await repositories.conversations.upsertDirectConversation({
     channelAccountId: channelAccount.channelAccountId,
     primaryContactId: contact.contactId,
     externalChatId: chatJid,
-    title: "Primary Recipient",
+    title: "Vijayalakshmi Saravanan",
     contextState
   });
 
@@ -426,7 +426,7 @@ test("live recovery smoke is opt-in and redacts live adapter details", async () 
     {
       ...process.env,
       VIJI_WACLI_LIVE_RECOVERY_SMOKE_ENABLED: "true",
-      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Primary Recipient",
+      VIJI_WACLI_LIVE_READ_SMOKE_QUERY: "Vijayalakshmi Saravanan",
       VIJI_WACLI_LIVE_RECOVERY_SMOKE_AFTER: "2026-05-01T10:00:00.000Z"
     },
     (config) => createWacliClient(config, routed.runner)

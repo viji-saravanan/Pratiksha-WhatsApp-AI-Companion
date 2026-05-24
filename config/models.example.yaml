@@ -1,6 +1,6 @@
 runtime: "ollama"
 deployment: "host-service-with-ssd-models"
-models_root: "/data/pratiksha/models/ollama"
+models_root: "/Volumes/Arya 1TB/VijiAI/models/ollama"
 primary_model:
   name: "qwen3:4b-instruct-2507-q4_K_M"
   family: "qwen3"

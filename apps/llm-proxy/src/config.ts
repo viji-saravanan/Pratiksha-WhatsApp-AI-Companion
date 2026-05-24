@@ -23,6 +23,6 @@ export function getLlmProxyConfigFromEnv(
   return {
     host: env.VIJI_LLM_PROXY_HOST || "127.0.0.1",
     port: parsePort(env.VIJI_LLM_PROXY_PORT, 8791),
-    token: env.VIJI_LLM_PROXY_TOKEN || "change-me-llm-token"
+    token: env.VIJI_LLM_PROXY_TOKEN || "local-llm-token"
   };
 }

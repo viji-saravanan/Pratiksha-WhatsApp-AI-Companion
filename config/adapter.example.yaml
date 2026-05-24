@@ -1,0 +1,7 @@
+adapter_type: "wacli"
+store_path: "/Volumes/Arya 1TB/VijiAI/wacli/store"
+media_path: "/Volumes/Arya 1TB/VijiAI/wacli/media"
+allowlisted_history_backfill: true
+allowlisted_media_download: true
+live_sync_strategy: "spike-required"
+

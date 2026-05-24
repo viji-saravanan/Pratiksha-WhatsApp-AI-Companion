@@ -41,7 +41,7 @@ assert.equal(
   normalized.messages[0].externalMessageId,
   "wamid.redacted.vijayalakshmi.0001"
 );
-assert.equal(normalized.messages[0].senderDisplayName, "Primary Recipient");
+assert.equal(normalized.messages[0].senderDisplayName, "Vijayalakshmi Saravanan");
 assert.equal(normalized.messages[2].conversationType, "group");
 assert.equal(liveShapeNormalized.rejected.length, 0);
 assert.equal(liveShapeNormalized.messages[1].fromMe, true);
@@ -74,12 +74,12 @@ try {
     const repositories = createRepositories(pool);
 
     const person = await repositories.contacts.createPerson({
-      displayName: "Primary Recipient",
+      displayName: "Vijayalakshmi Saravanan",
       notes: "Synthetic Phase 3 test contact"
     });
     const contact = await repositories.contacts.createAllowlistedContact({
       ownerPersonId: person.personId,
-      displayName: "Primary Recipient",
+      displayName: "Vijayalakshmi Saravanan",
       waJid: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
       trustLevel: "trusted"
     });
@@ -91,7 +91,7 @@ try {
     const channelAccount =
       await repositories.channelAccounts.createChannelAccount({
         label: "Phase 3 redacted wacli fixture account",
-        storePath: "/data/pratiksha/wacli/store",
+        storePath: "/Volumes/Arya 1TB/VijiAI/wacli/store",
         state: "auth_required"
       });
 
@@ -144,7 +144,7 @@ try {
     assert.equal(messages.rowCount, 1);
     assert.deepEqual(messages.rows[0], {
       externalMessageId: "wamid.redacted.vijayalakshmi.0001",
-      body: "Synthetic redacted recipient request for Phase 3 ingestion."
+      body: "Synthetic redacted Vijayalakshmi request for Phase 3 ingestion."
     });
 
     const adapterEvents = await pool.query(`
@@ -158,7 +158,7 @@ try {
       .join("\n");
     assert.equal(
       adapterPayloadText.includes(
-        "Synthetic redacted recipient request for Phase 3 ingestion."
+        "Synthetic redacted Vijayalakshmi request for Phase 3 ingestion."
       ),
       false
     );
@@ -215,16 +215,16 @@ try {
         {
           id: "wamid.redacted.reply.base.inbound",
           chat_jid: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
-          chat_name: "Primary Recipient",
+          chat_name: "Vijayalakshmi Saravanan",
           sender_jid: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
-          sender_name: "Primary Recipient",
+          sender_name: "Vijayalakshmi Saravanan",
           text: "Synthetic base message.",
           timestamp: "2026-05-01T10:00:00.000Z"
         },
         {
           id: "wamid.redacted.reply.owner",
           chat_jid: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
-          chat_name: "Primary Recipient",
+          chat_name: "Vijayalakshmi Saravanan",
           from_me: true,
           text: "Synthetic owner reply.",
           timestamp: "2026-05-01T10:01:00.000Z",
@@ -240,10 +240,10 @@ try {
         {
           id: "wamid.redacted.reply.viji",
           chat_jid: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
-          chat_name: "Primary Recipient",
+          chat_name: "Vijayalakshmi Saravanan",
           sender_jid: "vijayalakshmi.saravanan.redacted@s.whatsapp.net",
-          sender_name: "Primary Recipient",
-          text: "Synthetic recipient reply.",
+          sender_name: "Vijayalakshmi Saravanan",
+          text: "Synthetic Viji reply.",
           timestamp: "2026-05-01T10:02:00.000Z",
           message: {
             extendedTextMessage: {
@@ -302,7 +302,7 @@ try {
 
     const disabledSend = await createWacliClient({
       bin: "wacli",
-      storePath: "/data/pratiksha/wacli/store",
+      storePath: "/Volumes/Arya 1TB/VijiAI/wacli/store",
       timeout: "30s",
       liveSmokeEnabled: false
     }).sendText({

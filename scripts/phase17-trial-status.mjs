@@ -4,7 +4,7 @@ import "./lib/load-env.mjs";
 import { pathToFileURL } from "node:url";
 
 const DEFAULT_API_BASE_URL = "http://127.0.0.1:8787";
-const DEFAULT_API_TOKEN = "change-me-api-token";
+const DEFAULT_API_TOKEN = "local-dev-token";
 
 const endpointSpecs = [
   ["health", "/health"],

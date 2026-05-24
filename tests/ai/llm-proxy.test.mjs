@@ -33,7 +33,7 @@ async function closeServer(server) {
 }
 
 test("llm proxy exposes health, draft generation, and embedding endpoints", async () => {
-  const token = "test-llm-proxy-token";
+  const token = "phase11-proxy-token";
   const fetchCalls = [];
   const server = createLlmProxyServer({
     token,
@@ -107,7 +107,7 @@ test("llm proxy exposes health, draft generation, and embedding endpoints", asyn
         "content-type": "application/json",
         "x-viji-llm-token": token
       },
-      body: JSON.stringify({ text: "Primary_Recipient_Marksheet.pdf" })
+      body: JSON.stringify({ text: "Vijayalakshmi_Marksheet.pdf" })
     });
     assert.equal(embedding.status, 200);
     const embeddingBody = await embedding.json();

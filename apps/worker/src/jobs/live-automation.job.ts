@@ -9,6 +9,7 @@ import { ERROR_CODES, type AppLogger } from "@viji/shared";
 import type { WhatsAppAdapter } from "@viji/whatsapp";
 import { generateDraftForInboundMessage } from "./draft-generation.job.js";
 import { runLiveAllowlistPoll, type LivePollPool } from "./live-polling.job.js";
+import type { LiveSyncReason } from "./live-sync-scheduler.js";
 import type { OutboundDispatcher } from "./outbound-dispatcher.interface.js";
 import {
   confirmSuggestedResourceFromInboundMessage,
@@ -30,11 +31,15 @@ export interface LiveAutomationCycleInput {
   automationLimit?: number;
   dispatchLimit?: number;
   now?: Date;
+  syncReason?: LiveSyncReason;
 }
 
 export interface LiveAutomationCycleResult {
   syncStatus: "completed" | "skipped" | "failed";
   syncErrorCode?: string;
+  syncDurationMs: number;
+  cycleDurationMs: number;
+  syncReason?: LiveSyncReason;
   pollStatus: string;
   contactsScanned: number;
   messagesSeen: number;
@@ -66,7 +71,7 @@ function positiveInteger(
 }
 
 function isLiveSyncBeforePollEnabled(env: NodeJS.ProcessEnv): boolean {
-  return env.VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED !== "false";
+  return env.VIJI_LIVE_SYNC_BEFORE_POLL_ENABLED === "true";
 }
 
 function booleanFromEnv(value: string | undefined): boolean {
@@ -82,11 +87,17 @@ function looksLikeResourceRequest(body: string | null): boolean {
 function emptyCycleResult(input: {
   syncStatus: LiveAutomationCycleResult["syncStatus"];
   syncErrorCode?: string;
+  syncDurationMs: number;
+  cycleDurationMs: number;
+  syncReason?: LiveSyncReason;
   pollStatus: string;
 }): LiveAutomationCycleResult {
   return {
     syncStatus: input.syncStatus,
     ...(input.syncErrorCode ? { syncErrorCode: input.syncErrorCode } : {}),
+    syncDurationMs: input.syncDurationMs,
+    cycleDurationMs: input.cycleDurationMs,
+    ...(input.syncReason ? { syncReason: input.syncReason } : {}),
     pollStatus: input.pollStatus,
     contactsScanned: 0,
     messagesSeen: 0,
@@ -202,6 +213,7 @@ export async function runLiveAutomationCycle(
   db: LivePollPool,
   input: LiveAutomationCycleInput
 ): Promise<LiveAutomationCycleResult> {
+  const cycleStartedAt = Date.now();
   const env = input.env ?? process.env;
   const modelName = getLlmModelNameFromEnv(env);
   const defaultMode = env.VIJI_DEFAULT_REPLY_MODE === "readonly" ||
@@ -212,24 +224,32 @@ export async function runLiveAutomationCycle(
   const globalKillSwitch = !isAutoReplyEnabled(env) || !isLiveSendEnabled(env);
   const now = input.now ?? new Date();
   let syncStatus: LiveAutomationCycleResult["syncStatus"] = "skipped";
+  let syncDurationMs = 0;
 
   if (isLiveSyncBeforePollEnabled(env)) {
+    const syncStartedAt = Date.now();
     const sync = await input.adapter.sync({
       once: true,
       idleExit: env.VIJI_LIVE_SYNC_IDLE_EXIT || "12s",
       refreshContacts: booleanFromEnv(env.VIJI_LIVE_SYNC_REFRESH_CONTACTS),
       refreshGroups: booleanFromEnv(env.VIJI_LIVE_SYNC_REFRESH_GROUPS)
     });
+    syncDurationMs = Date.now() - syncStartedAt;
 
     if (!sync.ok) {
       const result = emptyCycleResult({
         syncStatus: "failed",
         syncErrorCode: sync.code,
+        syncDurationMs,
+        cycleDurationMs: Date.now() - cycleStartedAt,
+        syncReason: input.syncReason,
         pollStatus: "sync_failed"
       });
       input.logger?.warn("live_automation.sync_failed", {
         syncErrorCode: sync.code,
-        retryable: sync.retryable
+        retryable: sync.retryable,
+        syncDurationMs,
+        syncReason: input.syncReason
       });
       input.logger?.info("live_automation.cycle_completed", { ...result });
       return result;
@@ -345,6 +365,11 @@ export async function runLiveAutomationCycle(
 
   const result = {
     syncStatus,
+    syncDurationMs,
+    cycleDurationMs: Date.now() - cycleStartedAt,
+    ...(input.syncReason && syncStatus !== "skipped"
+      ? { syncReason: input.syncReason }
+      : {}),
     pollStatus: poll.status,
     contactsScanned: poll.contactsScanned,
     messagesSeen: poll.messagesSeen,

@@ -1,0 +1,35 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: viji-api
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:8787
+        labels:
+          service: api
+
+  - job_name: viji-dashboard
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:8788
+        labels:
+          service: dashboard
+
+  - job_name: viji-llm-proxy
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - host.docker.internal:8791
+        labels:
+          service: llm-proxy
+
+  - job_name: prometheus
+    static_configs:
+      - targets:
+          - localhost:9090
+        labels:
+          service: prometheus

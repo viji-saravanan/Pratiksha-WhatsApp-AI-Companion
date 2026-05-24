@@ -1,4 +1,4 @@
-data_root: "/data/pratiksha"
+data_root: "/Volumes/Arya 1TB/VijiAI"
 storage_profile: "large-200gb"
 dashboard:
   host: "127.0.0.1"

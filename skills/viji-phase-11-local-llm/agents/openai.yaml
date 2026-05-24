@@ -1,0 +1,4 @@
+interface:
+  display_name: "Viji Phase 11 Local LLM"
+  short_description: "Docker-only local model runtime"
+  default_prompt: "Use $viji-phase-11-local-llm to wire local inference safely."
