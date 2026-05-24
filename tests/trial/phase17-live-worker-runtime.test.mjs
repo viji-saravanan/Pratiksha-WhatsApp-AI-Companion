@@ -5,22 +5,22 @@ const { resolveLiveWorkerStorageGate } = await import(
   "../../scripts/lib/live-worker-runtime.mjs"
 );
 
+const testDataRoot = "/tmp/pratiksha-test-root";
+const testSentinelPath = `${testDataRoot}/.viji-helper-root`;
+
 test("Phase 17 live worker storage gate requires data root and sentinel", () => {
-  const existingPaths = new Set([
-    "/Volumes/Test/Pratiksha",
-    "/Volumes/Test/Pratiksha/.viji-helper-root"
-  ]);
+  const existingPaths = new Set([testDataRoot, testSentinelPath]);
   const gate = resolveLiveWorkerStorageGate(
     {
-      VIJI_DATA_ROOT: "/Volumes/Test/Pratiksha",
+      VIJI_DATA_ROOT: testDataRoot,
       VIJI_SENTINEL_FILE: ".viji-helper-root"
     },
     (path) => existingPaths.has(path)
   );
 
   assert.deepEqual(gate, {
-    dataRoot: "/Volumes/Test/Pratiksha",
-    sentinelPath: "/Volumes/Test/Pratiksha/.viji-helper-root",
+    dataRoot: testDataRoot,
+    sentinelPath: testSentinelPath,
     dataRootAvailable: true,
     sentinelAvailable: true,
     available: true
@@ -30,10 +30,10 @@ test("Phase 17 live worker storage gate requires data root and sentinel", () => 
 test("Phase 17 live worker storage gate idles when sentinel disappears", () => {
   const gate = resolveLiveWorkerStorageGate(
     {
-      VIJI_DATA_ROOT: "/Volumes/Test/Pratiksha",
+      VIJI_DATA_ROOT: testDataRoot,
       VIJI_SENTINEL_FILE: ".viji-helper-root"
     },
-    (path) => path === "/Volumes/Test/Pratiksha"
+    (path) => path === testDataRoot
   );
 
   assert.equal(gate.dataRootAvailable, true);
@@ -44,10 +44,10 @@ test("Phase 17 live worker storage gate idles when sentinel disappears", () => {
 test("Phase 17 live worker storage gate supports absolute sentinel paths", () => {
   const gate = resolveLiveWorkerStorageGate(
     {
-      VIJI_DATA_ROOT: "/Volumes/Test/Pratiksha",
+      VIJI_DATA_ROOT: testDataRoot,
       VIJI_SENTINEL_FILE: "/tmp/viji-sentinel"
     },
-    (path) => path === "/Volumes/Test/Pratiksha" || path === "/tmp/viji-sentinel"
+    (path) => path === testDataRoot || path === "/tmp/viji-sentinel"
   );
 
   assert.equal(gate.sentinelPath, "/tmp/viji-sentinel");
