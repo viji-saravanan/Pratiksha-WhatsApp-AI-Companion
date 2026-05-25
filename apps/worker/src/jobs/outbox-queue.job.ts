@@ -445,6 +445,8 @@ export async function confirmSuggestedResourceFromInboundMessage(
       contentSummary: option.contentSummary,
       rank: option.rank,
       score: Number(option.score),
+      lexicalScore: Number(option.score),
+      semanticScore: null,
       matchedTerms: []
     }))
   );

@@ -39,7 +39,9 @@ Current runtime baseline:
 - Storage quota accounting now uses allocated disk blocks so the Docker Desktop sparse disk image on the SSD does not falsely consume the project quota by apparent size.
 - Phase 20 is complete as a spike and boundary phase. `packages/whatsapp` now has an optional event-stream adapter contract; `docs/ADAPTER_SPIKE.md` compares current `wacli`, documented `wacli` follow/events behavior, direct `whatsmeow`, and Baileys-style bridge options. The production runtime still stays on `wacli` until a persistent adapter passes recovery, duplicate-prevention, media, and send-gate tests.
 - Phase 21 is complete. The live worker now drains queued allowlisted media during unattended Docker runtime, stores each download under a per-job SSD-backed media directory, cleans partial files after failures, auto-promotes successful downloads into contact-scoped resources, and exposes queue/drain status through API, CLI, dashboard, and metrics.
-- The remaining open review themes are Phase 23 through Phase 26: voice transcription, semantic retrieval, multi-contact copy cleanup, and evaluation gates.
+- Phase 23 is complete. Downloaded voice notes can be transcribed through a local multilingual `whisper.cpp`-style command, transcript status/confidence is stored in Postgres, and audio-only messages become automation candidates only after a high-confidence transcript.
+- Phase 24 is complete. Resource suggestions now use local embeddings over registered resource metadata and extracted KB chunks, store retrieval audit rows in Postgres, preserve exact filename priority, and keep contact permissions in the SQL retrieval filter.
+- The remaining open review themes are Phase 25 through Phase 26: multi-contact copy cleanup and evaluation gates.
 
 ## Future Phase Plan
 
@@ -186,12 +188,19 @@ Acceptance checks:
 
 Primary files:
 
-- `apps/worker/src/jobs/media-sync.job.ts`
-- `packages/ai` or a new documented local speech package
+- `apps/worker/src/jobs/audio-transcription.job.ts`
+- `packages/ai/src/speech-to-text.ts`
 - `packages/db/src/repositories/messages.repo.ts`
-- `tests/whatsapp/`
+- `migrations/0010_message_media_transcripts.sql`
+- `tests/whatsapp/phase23-voice-transcription.test.mjs`
+
+Status:
+
+- Complete. Phase 23 uses local multilingual command-based STT, stores transcript rows in `msg_message_media_transcripts`, exposes API/CLI/dashboard status, and keeps low-confidence or failed audio idle.
 
 ### Phase 24: Semantic Retrieval and Resource Matching
+
+Status: Complete.
 
 Goal:
 
@@ -214,11 +223,18 @@ Acceptance checks:
 
 Primary files:
 
-- `migrations/`
+- `migrations/0011_semantic_retrieval.sql`
 - `docs/ERD.md`
 - `packages/resources/src/resource-matcher.ts`
-- `packages/ai/src/ollama-client.ts`
-- New retrieval tests under `tests/resources/`
+- `packages/ai/src/client-factory.ts`
+- `apps/worker/src/jobs/resource-semantic.job.ts`
+- `tests/resources/phase24-semantic-retrieval.test.mjs`
+
+Current result:
+
+- The live resource-suggestion job embeds the user query, lazily indexes searchable resource metadata and extracted chunks for the requesting contact, and passes semantic scores into the existing exact/lexical ranker.
+- The retrieval path is an enhancement only; if embeddings or Ollama are unavailable, the worker logs a degraded event and falls back to lexical matching without unsafe sends.
+- File send authority is unchanged: Pratiksha proposes registered filenames, and the recipient must confirm the exact pending file in WhatsApp before the outbox sends.
 
 ### Phase 25: Multi-Contact Copy and Authority Cleanup
 

@@ -29,6 +29,7 @@ RUN corepack enable \
   && apt-get update \
   && apt-get install -y --no-install-recommends \
     ca-certificates \
+    ffmpeg \
     poppler-utils \
     tesseract-ocr \
   && rm -rf /var/lib/apt/lists/*

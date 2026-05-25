@@ -81,7 +81,7 @@ function booleanFromEnv(value: string | undefined): boolean {
 function looksLikeResourceRequest(body: string | null): boolean {
   const normalized = body?.toLowerCase() ?? "";
   return /\b(send|share|upload|forward|need|have|get|give)\b/.test(normalized) &&
-    /\b(file|pdf|document|doc|marksheet|mark sheet|resume|photo|image|certificate|media)\b/.test(normalized);
+    /\b(file|pdf|document|doc|marksheet|mark sheet|resume|photo|image|certificate|media|result|results|scorecard|record)\b/.test(normalized);
 }
 
 function emptyCycleResult(input: {
@@ -171,6 +171,8 @@ async function handlePendingResourceConfirmation(input: {
       contentSummary: option.contentSummary,
       rank: option.rank,
       score: Number(option.score),
+      lexicalScore: Number(option.score),
+      semanticScore: null,
       matchedTerms: []
     }))
   );
@@ -299,7 +301,9 @@ export async function runLiveAutomationCycle(
         triggerMessageId: message.messageId,
         queryText: message.body ?? "",
         modelName: "resource-catalog-local",
-        now
+        now,
+        env,
+        logger: input.logger
       });
       resourcePromptsCreated += 1;
       const queued = await queuePolicyPermittedTextDraft(db, {

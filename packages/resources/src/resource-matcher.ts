@@ -5,12 +5,21 @@ export interface ResourceSearchDocument {
   aliases?: readonly string[];
   description?: string | null;
   contentSummary?: string | null;
+  updatedAt?: Date | string | null;
 }
 
 export interface RankedResourceCandidate extends ResourceSearchDocument {
   rank: number;
   score: number;
+  lexicalScore: number;
+  semanticScore: number | null;
   matchedTerms: string[];
+}
+
+export interface SemanticResourceMatch {
+  resourceId: string;
+  semanticScore: number;
+  documentChunkId?: string | null;
 }
 
 export type ResourceSelectionResolution =
@@ -130,6 +139,25 @@ function scoreDocument(document: ResourceSearchDocument, query: string): {
 
   const matchedTerms = new Set<string>();
   let score = 0;
+  const normalizedQuery = normalizeText(query);
+  const normalizedFileName = normalizeText(document.registeredFileName);
+  const normalizedFileStem = normalizeText(
+    document.registeredFileName.replace(/\.[^.]+$/, "")
+  );
+  const normalizedTitle = normalizeText(document.title);
+
+  if (normalizedQuery.includes(normalizedFileName)) {
+    score += 40;
+    matchedTerms.add("exact_filename");
+  } else if (normalizedFileStem && normalizedQuery.includes(normalizedFileStem)) {
+    score += 30;
+    matchedTerms.add("filename");
+  }
+
+  if (normalizedTitle && normalizedQuery.includes(normalizedTitle)) {
+    score += 20;
+    matchedTerms.add("title");
+  }
 
   for (const { text, weight } of weightedText(document)) {
     const terms = new Set(tokenize(text));
@@ -152,22 +180,87 @@ function scoreDocument(document: ResourceSearchDocument, query: string): {
   };
 }
 
+function scoreRecency(document: ResourceSearchDocument, now = new Date()): number {
+  if (!document.updatedAt) {
+    return 0;
+  }
+
+  const updatedAt = new Date(document.updatedAt);
+  const updatedAtMs = updatedAt.getTime();
+  if (!Number.isFinite(updatedAtMs)) {
+    return 0;
+  }
+
+  const ageDays = Math.max(0, (now.getTime() - updatedAtMs) / 86_400_000);
+  if (ageDays <= 7) {
+    return 1.5;
+  }
+  if (ageDays <= 30) {
+    return 1;
+  }
+  if (ageDays <= 90) {
+    return 0.5;
+  }
+
+  return 0;
+}
+
 export function rankResourceCandidates(
   documents: readonly ResourceSearchDocument[],
   query: string,
-  options: { limit?: number; minScore?: number } = {}
+  options: {
+    limit?: number;
+    minScore?: number;
+    semanticMatches?: readonly SemanticResourceMatch[];
+    semanticWeight?: number;
+  } = {}
 ): RankedResourceCandidate[] {
   const minScore = options.minScore ?? 3;
   const limit = options.limit ?? 5;
+  const semanticByResourceId = new Map(
+    (options.semanticMatches ?? []).map((match) => [
+      match.resourceId,
+      match.semanticScore
+    ])
+  );
+  const semanticWeight = options.semanticWeight ?? 12;
 
   return documents
-    .map((document) => ({
-      ...document,
-      rank: 0,
-      ...scoreDocument(document, query)
-    }))
+    .map((document) => {
+      const lexical = scoreDocument(document, query);
+      const recencyPoints = scoreRecency(document);
+      const semanticScore = semanticByResourceId.get(document.resourceId) ?? null;
+      const semanticPoints =
+        semanticScore === null ? 0 : Math.max(0, semanticScore) * semanticWeight;
+      return {
+        ...document,
+        rank: 0,
+        score: lexical.score + semanticPoints + recencyPoints,
+        lexicalScore: lexical.score,
+        semanticScore,
+        matchedTerms:
+          semanticScore === null
+            ? unique([
+                ...lexical.matchedTerms,
+                ...(recencyPoints > 0 ? ["recent"] : [])
+              ])
+            : unique([
+                ...lexical.matchedTerms,
+                ...(recencyPoints > 0 ? ["recent"] : []),
+                "semantic"
+              ])
+      };
+    })
     .filter((candidate) => candidate.score >= minScore)
     .sort((left, right) => {
+      const leftExact = left.matchedTerms.includes("exact_filename") ||
+        left.matchedTerms.includes("filename");
+      const rightExact = right.matchedTerms.includes("exact_filename") ||
+        right.matchedTerms.includes("filename");
+      if (leftExact !== rightExact) {
+        return leftExact ? -1 : 1;
+      }
+
       if (right.score !== left.score) {
         return right.score - left.score;
       }

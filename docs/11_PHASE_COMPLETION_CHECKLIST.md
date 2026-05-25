@@ -4,16 +4,16 @@
 
 Numbered roadmap status:
 
-- Complete: 22 phases, Phase 0 through Phase 16 plus Phase 18 through Phase 22.
+- Complete: 24 phases, Phase 0 through Phase 16 plus Phase 18 through Phase 24.
 - In progress: 1 numbered phase, Phase 17.
-- Planned: 4 numbered phases, Phase 23 through Phase 26.
-- Remaining: Phase 17 production-contact trial follow-up plus Phase 23 through Phase 26.
+- Planned: 2 numbered phases, Phase 25 through Phase 26.
+- Remaining: Phase 17 production-contact trial follow-up plus Phase 25 through Phase 26.
 - Separate observability work block: complete.
 
 Practical remaining work count:
 
 - Phase 17 now has a fresh-message live reply observation through the allowlisted `Myself` contact. It still needs the production-contact follow-up with Vijayalakshmi and thermal/CPU observations over a longer window.
-- Phase 23 through Phase 26 are future implementation phases created from the repo-wide review in [14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md](14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md).
+- Phase 25 through Phase 26 are future implementation phases created from the repo-wide review in [14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md](14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md).
 
 ## Completion Rule
 
@@ -64,8 +64,8 @@ Universal gate for every phase:
 | Phase 20 | Persistent WhatsApp adapter spike | Complete | Event-stream adapter contract, direct `wacli`/`whatsmeow`/Baileys comparison, local capability check, and rollback gate |
 | Phase 21 | Automatic received-media persistence | Complete | Live worker drains queued media, stores files under per-job media directories, cleans partials, auto-promotes resources, and surfaces queue/drain status |
 | Phase 22 | Image and document understanding | Complete | KB extraction tables, local extractor boundary, API/register extraction, OCR/PDF tool wiring, safe snippets, and focused tests |
-| Phase 23 | Voice note transcription | Planned | Not started; target is local audio transcription linked to message media |
-| Phase 24 | Semantic retrieval and resource matching | Planned | Not started; target is hybrid lexical plus pgvector retrieval |
+| Phase 23 | Voice note transcription | Complete | Local STT adapter, transcript table/repository, live-worker drain hook, dashboard/CLI/API status, and focused tests |
+| Phase 24 | Semantic retrieval and resource matching | Complete | pgvector-backed resource and chunk embeddings, hybrid ranker, dashboard visibility, exact-match guard, and focused tests |
 | Phase 25 | Multi-contact copy and authority cleanup | Planned | Not started; target is contact-derived runtime copy without changing WhatsApp-only authority |
 | Phase 26 | Evaluation harness and thermal gates | Planned | Not started; target is repeatable accuracy, safety, latency, CPU, and SSD-growth gates |
 
@@ -118,21 +118,22 @@ Goal: understand images and documents locally.
 
 Goal: transcribe voice notes locally.
 
-- [ ] Choose local speech-to-text runtime and document storage impact.
-- [ ] Link transcripts to message media.
-- [ ] Expose transcript status/confidence.
-- [ ] Block unsafe sends for missing or low-confidence transcripts.
-- [ ] Test short audio, empty/noisy audio, unsupported MIME, and duplicate jobs.
+- [x] Choose local speech-to-text runtime and document storage impact.
+- [x] Link transcripts to message media.
+- [x] Expose transcript status/confidence.
+- [x] Block unsafe sends for missing or low-confidence transcripts.
+- [x] Test short audio, empty/noisy audio, unsupported MIME, and duplicate jobs.
 
 ### Phase 24 Checklist
 
 Goal: add hybrid semantic retrieval.
 
-- [ ] Update ERD with embedding storage and prefixed columns.
-- [ ] Add migration-controlled vector indexes.
-- [ ] Implement exact, lexical, semantic, permission, and recency ranking.
-- [ ] Preserve deterministic exact filename behavior.
-- [ ] Test positive, negative, ambiguous, and permission-filtered retrieval.
+- [x] Update ERD with embedding storage and prefixed columns.
+- [x] Add migration-controlled vector indexes.
+- [x] Implement exact, lexical, semantic, permission-aware, and recency-aware ranking.
+- [x] Preserve deterministic exact filename behavior.
+- [x] Test positive semantic retrieval and permission-filtered retrieval.
+- [ ] Add broader offline evaluation fixtures for resumes, certificates, and recency weighting.
 
 ### Phase 25 Checklist
 
@@ -229,15 +230,16 @@ Goal: make future Codex work follow the repo rules quickly.
 Latest completed verification:
 
 ```bash
-node --test tests/resources/phase22-document-understanding.test.mjs tests/resources/phase12-resource-api-cli.test.mjs
+node --test tests/whatsapp/phase23-voice-transcription.test.mjs
 node --test tests/migrations/phase1-migrations.test.mjs
 corepack pnpm typecheck
-node --test tests/**/*.test.mjs
+corepack pnpm --filter @viji/dashboard build
 docker compose --profile dashboard --profile app --profile live config --quiet
-docker compose build api live-worker
+node --test tests/**/*.test.mjs
+docker compose build api live-worker dashboard
 ```
 
-Result: Phase 22 focused extraction tests passed, API/CLI resource indexing regression passed, migration/schema checks passed, 118 Node tests passed, TypeScript passed, Docker Compose config passed, and API/live-worker Docker images rebuilt with OCR/PDF tools. Phase 22 added typed KB extraction records, local PDF/image/text extraction, safe prompt-snippet sanitization, resource summary updates through register/index paths, and Docker runtime packages for free/open-source OCR/PDF extraction.
+Result: Phase 23 focused voice-transcription tests passed, migration/schema checks passed, TypeScript passed, dashboard build passed, Docker Compose config passed, 123 Node tests passed, and API/live-worker/dashboard Docker images rebuilt with local media/OCR/STT runtime tools. Phase 23 added transcript persistence, multilingual local command-based speech-to-text, live-worker audio transcription drain, API/CLI/dashboard transcript surfaces, and a low-confidence safety gate that keeps uncertain audio idle instead of generating a reply.
 
 Previous completed verification:
 
