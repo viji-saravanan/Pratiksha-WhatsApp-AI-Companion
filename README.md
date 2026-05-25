@@ -3,6 +3,7 @@
 <p align="center">
   <a href="#what-it-does">Features</a> |
   <a href="#run-and-stop">Run and stop</a> |
+  <a href="#storage-and-docker">Storage</a> |
   <a href="#architecture">Architecture</a> |
   <a href="#creators">Creators</a>
 </p>
@@ -26,6 +27,7 @@ Pratiksha is a local-first WhatsApp companion designed for private, SSD-backed a
 - Blocks file sends until the trusted WhatsApp recipient confirms from WhatsApp.
 - Shows categorized logs plus raw container logs from the dashboard.
 - Supports dark mode, mobile views, upload controls, storage status, and health checks.
+- Keeps public defaults portable while allowing a private `.env` to place heavy runtime data on an external SSD.
 
 ## How It Was Made
 
@@ -47,10 +49,10 @@ Pratiksha is a local-first WhatsApp companion designed for private, SSD-backed a
 
 ## Run And Stop
 
-Start everything:
+From the repository root, start the full live stack after `.env` is configured:
 
 ```bash
-corepack pnpm stack:dashboard:up
+corepack pnpm stack:live:up
 ```
 
 Stop everything:
@@ -59,13 +61,13 @@ Stop everything:
 corepack pnpm stack:down
 ```
 
-Live WhatsApp branch startup:
+That live command first stops stale Compose services, runs a WhatsApp store preflight, then starts the dashboard, API, Postgres, LLM proxy, storage guard, and live worker. The preflight preserves `session.db`, backs up any malformed disposable `wacli.db` cache into the configured backup folder, and warms a missing or empty cache with a bounded `wacli sync --once` before the worker starts.
+
+Dashboard-only safe mode:
 
 ```bash
-corepack pnpm stack:live:up
+corepack pnpm stack:dashboard:up
 ```
-
-That live command first stops stale Compose services, runs a WhatsApp store preflight, then starts the dashboard, API, Postgres, LLM proxy, storage guard, and live worker. The preflight preserves `session.db`, backs up any malformed disposable `wacli.db` cache into the configured backup folder, and warms a missing or empty cache with a bounded `wacli sync --once` before the worker starts.
 
 Dashboard: [http://localhost:8788](http://localhost:8788)
 API: [http://localhost:8787](http://localhost:8787)
@@ -90,6 +92,34 @@ Pratiksha has two separate storage layers:
 - Docker Desktop image and VM storage: controlled globally by Docker Desktop settings.
 
 For a normal clone, Pratiksha does not require a specific external drive. To keep this project on an SSD, point the two host paths in your local `.env` at that drive. If Docker Desktop's own disk image is also moved to an SSD, Docker images and volumes for other Docker projects may use that same Docker Desktop location too. Those other projects do not inherently need the Pratiksha SSD unless their own Compose files or Docker Desktop's global data root point there.
+## Storage And Docker
+
+Pratiksha separates project runtime data from Docker Desktop's global image storage.
+
+Project runtime data is controlled by `.env`:
+
+```env
+PRATIKSHA_HOST_DATA_ROOT=./.pratiksha-data
+PRATIKSHA_HOST_RESOURCE_ROOT=./viji-files
+VIJI_CONTAINER_DATA_ROOT=/data/pratiksha
+VIJI_CONTAINER_RESOURCE_ROOT=/data/pratiksha/viji-files
+```
+
+For an external SSD setup, change only the host paths in your private `.env`.
+Do not commit those machine-specific paths. Docker Desktop image/VM storage is a
+separate global Docker Desktop setting; moving it to an SSD can affect other
+Docker projects too, while Pratiksha's Compose mounts affect only this project.
+
+## File Repository
+
+Shareable files live under `PRATIKSHA_HOST_RESOURCE_ROOT`, mounted into the
+containers as `VIJI_CONTAINER_RESOURCE_ROOT`. Files must be registered before
+Pratiksha can suggest or send them. A file send is queued only after the
+WhatsApp requester confirms the exact pending proposal from WhatsApp.
+
+Received WhatsApp media is treated as adapter/media input first. Reusing it as a
+shareable resource requires the same catalog and confirmation path as local
+files.
 
 ## Local AI
 
@@ -127,6 +157,16 @@ See [Live WhatsApp Adapter](docs/LIVE_WHATSAPP_ADAPTER.md) for the adapter branc
 - WhatsApp auth state is preserved across restarts. Disposable adapter cache corruption is handled before startup instead of requiring manual cleanup.
 - Storage usage is tracked against the configured Pratiksha data root, with filesystem free space treated as a separate safety signal.
 
+## Monitoring And Logs
+
+The dashboard is the primary visual control room. It surfaces runtime status,
+storage health, conversations, pending resource confirmations, resource catalog
+state, audit events, categorized logs, and raw container logs. CLI commands are
+kept as a fallback for headless operation and debugging.
+
+Observability data should stay under the configured runtime data root. Logs,
+metrics, and dashboards are useful operator artifacts, not source files.
+
 ## Repository Map
 
 ```text
@@ -141,6 +181,13 @@ packages/*           Shared TypeScript libraries
 migrations           Postgres schema and seed data
 docs                 ERD and screenshots
 ```
+
+## Publishing Safety
+
+See [docs/PUBLISHING.md](docs/PUBLISHING.md) before opening or pushing public
+branches. Public commits must not contain private absolute paths, real contact
+details, auth stores, `.env`, databases, local media, logs, backups, or model
+files.
 
 ## Checks
 
