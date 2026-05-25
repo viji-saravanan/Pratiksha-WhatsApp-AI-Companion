@@ -1,3 +1,4 @@
+export * from "./jobs/audio-transcription.job.js";
 export * from "./jobs/draft-generation.job.js";
 export * from "./jobs/inbound-ingestion.job.js";
 export * from "./jobs/live-automation.job.js";

@@ -46,7 +46,7 @@ For the repo-wide review that added the next implementation phases, see [14_REPO
 | Phase 20 | Complete | Persistent WhatsApp adapter spike, event-stream contract, option comparison, and rollback gate |
 | Phase 21 | Complete | Automatic received-media persistence in unattended Docker runtime |
 | Phase 22 | Complete | Image and document understanding for OCR, parsing, and safer retrieval |
-| Phase 23 | Planned | Local voice note transcription and transcript persistence |
+| Phase 23 | Complete | Local voice note transcription, transcript persistence, status surfaces, and low-confidence safety gate |
 | Phase 24 | Planned | Hybrid lexical plus semantic resource retrieval with pgvector |
 | Phase 25 | Planned | Multi-contact runtime copy and authority cleanup |
 | Phase 26 | Planned | Evaluation harness and thermal/performance gates |
@@ -1178,6 +1178,26 @@ Review focus:
 Exit criteria:
 
 - Voice notes from allowlisted contacts can be stored and understood locally.
+
+Implementation notes:
+
+- `migrations/0010_message_media_transcripts.sql` stores one transcript row per downloaded media item with typed status, transcript text, language, confidence, duration, model name, and flexible local STT metadata.
+- `packages/ai/src/speech-to-text.ts` runs a configurable local command, defaulting to a multilingual `whisper.cpp` style `whisper-cli` invocation with language auto-detection. No cloud transcription dependency is introduced.
+- `apps/worker/src/jobs/audio-transcription.job.ts` drains downloaded audio media, writes transcript status to Postgres, and only copies high-confidence transcript text into the inbound audio message body so automation can pick it up.
+- Empty, low-confidence, failed, and unsupported audio leaves the original media saved but does not create an automation candidate.
+- API, CLI, dashboard, metrics, and Compose env now expose transcript status and local STT settings.
+
+Completed checks:
+
+```bash
+node --test tests/whatsapp/phase23-voice-transcription.test.mjs
+node --test tests/migrations/phase1-migrations.test.mjs
+corepack pnpm typecheck
+corepack pnpm --filter @viji/dashboard build
+docker compose --profile dashboard --profile app --profile live config --quiet
+node --test tests/**/*.test.mjs
+docker compose build api live-worker dashboard
+```
 
 ## Phase 24: Semantic Retrieval and Resource Matching
 
