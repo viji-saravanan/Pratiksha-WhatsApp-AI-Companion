@@ -1,6 +1,6 @@
 import { constants } from "node:fs";
-import { access, mkdir, stat } from "node:fs/promises";
-import { basename, extname } from "node:path";
+import { access, mkdir, rm, stat } from "node:fs/promises";
+import { basename, extname, join } from "node:path";
 import { getRuntimePaths, getStorageProfile } from "@viji/config";
 import {
   getDirectoryUsageBytes,
@@ -46,6 +46,18 @@ export interface DispatchNextMediaDownloadJobInput {
   storageStateOverride?: MediaStorageState;
 }
 
+export interface MediaDrainConfig {
+  enabled: boolean;
+  limitPerCycle: number;
+  autoPromote: boolean;
+}
+
+export interface DrainMediaDownloadQueueInput
+  extends DispatchNextMediaDownloadJobInput {
+  limitPerCycle?: number;
+  autoPromote?: boolean;
+}
+
 export type DispatchNextMediaDownloadJobResult =
   | { status: "idle" }
   | {
@@ -67,6 +79,16 @@ export type DispatchNextMediaDownloadJobResult =
 export type PromoteDownloadedMessageMediaResult =
   | { status: "promoted"; resource: FileResourceRecord }
   | { status: "blocked"; reason: string };
+
+export interface DrainMediaDownloadQueueResult {
+  attempted: number;
+  downloaded: number;
+  promoted: number;
+  blocked: number;
+  failed: number;
+  promotionBlocked: number;
+  idle: boolean;
+}
 
 async function canAccess(path: string, mode: number): Promise<boolean> {
   try {
@@ -139,6 +161,25 @@ function storageBlockReason(state: MediaStorageState): string | null {
   }
 
   return `storage_${state}`;
+}
+
+function positiveInteger(value: string | undefined, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+export function getMediaDrainConfigFromEnv(
+  env: NodeJS.ProcessEnv = process.env
+): MediaDrainConfig {
+  return {
+    enabled: env.VIJI_LIVE_MEDIA_DRAIN_ENABLED !== "false",
+    limitPerCycle: positiveInteger(env.VIJI_LIVE_MEDIA_DRAIN_LIMIT_PER_CYCLE, 3),
+    autoPromote: env.VIJI_LIVE_MEDIA_AUTO_PROMOTE_ENABLED !== "false"
+  };
+}
+
+async function cleanupPartialMediaDirectory(path: string): Promise<void> {
+  await rm(path, { recursive: true, force: true }).catch(() => undefined);
 }
 
 function stringField(record: Record<string, unknown>, keys: readonly string[]): string | null {
@@ -341,13 +382,21 @@ export async function dispatchNextMediaDownloadJob(
     };
   }
 
+  const jobOutputRoot = join(
+    storageStatus.mediaRoot,
+    "incoming",
+    claimedJob.mediaDownloadJobId
+  );
+  await mkdir(jobOutputRoot, { recursive: true });
+
   const downloadResult = (await input.adapter.downloadMedia({
     chatId: claimedJob.externalChatId,
     messageId: claimedJob.externalMediaId ?? claimedJob.externalMessageId,
-    output: storageStatus.mediaRoot
+    output: jobOutputRoot
   })) as ExternalCallResult<unknown>;
 
   if (!downloadResult.ok) {
+    await cleanupPartialMediaDirectory(jobOutputRoot);
     return {
       status: "failed",
       job: await failMediaJob({
@@ -362,6 +411,7 @@ export async function dispatchNextMediaDownloadJob(
 
   const parsedDownload = mediaDownloadValue(downloadResult.value);
   if (!parsedDownload.outputPath) {
+    await cleanupPartialMediaDirectory(jobOutputRoot);
     return {
       status: "failed",
       job: await failMediaJob({
@@ -394,6 +444,7 @@ export async function dispatchNextMediaDownloadJob(
       fileAssetId: completed.fileAssetId
     };
   } catch (error) {
+    await cleanupPartialMediaDirectory(jobOutputRoot);
     const blockedJob = await blockMediaJob({
       db,
       job: claimedJob,
@@ -417,6 +468,57 @@ export async function dispatchNextMediaDownloadJob(
       reason: "media_path_invalid"
     };
   }
+}
+
+export async function drainMediaDownloadQueue(
+  db: DbExecutor,
+  input: DrainMediaDownloadQueueInput
+): Promise<DrainMediaDownloadQueueResult> {
+  const limit = Math.min(Math.max(input.limitPerCycle ?? 3, 0), 25);
+  const autoPromote = input.autoPromote ?? true;
+  const summary: DrainMediaDownloadQueueResult = {
+    attempted: 0,
+    downloaded: 0,
+    promoted: 0,
+    blocked: 0,
+    failed: 0,
+    promotionBlocked: 0,
+    idle: false
+  };
+
+  for (let index = 0; index < limit; index += 1) {
+    const result = await dispatchNextMediaDownloadJob(db, input);
+    if (result.status === "idle") {
+      summary.idle = true;
+      break;
+    }
+
+    summary.attempted += 1;
+
+    if (result.status === "downloaded") {
+      summary.downloaded += 1;
+      if (autoPromote) {
+        const promoted = await promoteDownloadedMessageMediaToResource(db, {
+          messageMediaId: result.job.messageMediaId
+        });
+        if (promoted.status === "promoted") {
+          summary.promoted += 1;
+        } else {
+          summary.promotionBlocked += 1;
+        }
+      }
+      continue;
+    }
+
+    if (result.status === "blocked") {
+      summary.blocked += 1;
+      continue;
+    }
+
+    summary.failed += 1;
+  }
+
+  return summary;
 }
 
 function extensionFromMime(mimeType: string): string {
@@ -467,8 +569,9 @@ function resourceFileName(media: MessageMediaPromotionRecord): string {
 
 function mediaResourceSummary(media: MessageMediaPromotionRecord): string {
   const receivedAt = media.receivedAt?.toISOString() ?? "unknown date";
+  const senderLabel = media.senderDisplayName ?? "the WhatsApp requester";
   const parts = [
-    `WhatsApp ${media.mimeType} received from the trusted recipient on ${receivedAt}.`,
+    `WhatsApp ${media.mimeType} received from ${senderLabel} on ${receivedAt}.`,
     media.fileName ? `Original filename: ${media.fileName}.` : "",
     media.messageBody ? `Caption: ${media.messageBody.slice(0, 500)}` : ""
   ].filter(Boolean);
@@ -508,7 +611,9 @@ export async function promoteDownloadedMessageMediaToResource(
       media.mimeType,
       media.messageBody ?? ""
     ].filter((value) => value.trim().length > 0),
-    description: "Previously received WhatsApp media from the trusted recipient.",
+    description: `Previously received WhatsApp media from ${
+      media.senderDisplayName ?? "the requester"
+    }.`,
     contentSummary: mediaResourceSummary(media),
     allowedContactIds: media.senderContactId ? [media.senderContactId] : null,
     requiresRecipientConfirmation: true,

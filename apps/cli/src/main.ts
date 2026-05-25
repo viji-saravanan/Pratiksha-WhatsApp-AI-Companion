@@ -90,9 +90,13 @@ function humanStatus(status: Record<string, unknown>): string {
       live?.syncBeforePollEnabled === true ? " + forced-before-poll" : ""
     }`,
     `live sync interval: ${String(live?.syncIntervalMs ?? "unknown")}ms`,
+    `media drain: ${live?.mediaDrainEnabled === false ? "disabled" : "enabled"} (${String(
+      live?.mediaDrainLimitPerCycle ?? "unknown"
+    )}/cycle, auto-promote=${String(live?.mediaAutoPromoteEnabled ?? "unknown")})`,
     `conversations: ${String(counts?.conversations ?? 0)}`,
     `pending confirmations: ${String(counts?.pendingConfirmations ?? 0)}`,
     `blocked jobs: ${String(counts?.blockedJobs ?? 0)}`,
+    `active media downloads: ${String(counts?.activeMediaDownloadJobs ?? 0)}`,
     `context states: ${JSON.stringify(contextStates ?? {})}`
   ].join("\n");
 }
@@ -136,6 +140,28 @@ function humanResources(payload: Record<string, unknown>): string {
   ].join("\n");
 }
 
+function humanMediaJobs(payload: Record<string, unknown>): string {
+  const jobs = Array.isArray(payload.mediaJobs) ? payload.mediaJobs : [];
+  if (jobs.length === 0) {
+    return "media jobs: 0";
+  }
+
+  return [
+    `media jobs: ${jobs.length}`,
+    ...jobs.map((job, index) => {
+      const item = job as {
+        state?: string;
+        fileName?: string;
+        mimeType?: string;
+        externalMessageId?: string;
+      };
+      return `${index + 1}. ${item.state ?? "unknown"} - ${
+        item.fileName ?? item.externalMessageId ?? "media"
+      } (${item.mimeType ?? "unknown"})`;
+    })
+  ].join("\n");
+}
+
 async function writePayload(
   output: CliOutput,
   args: string[],
@@ -170,6 +196,7 @@ export async function runCli(
           "  viji storage status [--json]",
           "  viji sync status [--json]",
           "  viji backfill status [--json]",
+          "  viji media status [--json]",
           "  viji drafts [--json]",
           "  viji confirmations [--json]",
           "  viji resources list [--json]",
@@ -238,6 +265,12 @@ export async function runCli(
     if (command === "backfill" && subcommand === "status") {
       const result = await apiClient.get<Record<string, unknown>>("/backfill/status");
       await writePayload(output, argv, result);
+      return 0;
+    }
+
+    if (command === "media" && subcommand === "status") {
+      const result = await apiClient.get<Record<string, unknown>>("/media/jobs");
+      await writePayload(output, argv, result, humanMediaJobs(result));
       return 0;
     }
 

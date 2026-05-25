@@ -42,6 +42,7 @@ export interface MessageMediaRecord {
 export interface MessageMediaPromotionRecord extends MessageMediaRecord {
   conversationId: string;
   senderContactId: string | null;
+  senderDisplayName: string | null;
   messageBody: string | null;
   receivedAt: Date | null;
 }
@@ -387,12 +388,16 @@ export function createMessagesRepository(db: DbExecutor) {
             ${messageMediaReturningSql()},
             msg_messages.parent_msg_conversation_id AS "conversationId",
             msg_messages.sender_core_contact_id AS "senderContactId",
+            core_contacts.core_contact_display_name AS "senderDisplayName",
             msg_messages.msg_message_body AS "messageBody",
             msg_messages.msg_message_received_at AS "receivedAt"
           FROM msg_message_media
           INNER JOIN msg_messages
             ON msg_messages.msg_message_id =
               msg_message_media.parent_msg_message_id
+          LEFT JOIN core_contacts
+            ON core_contacts.core_contact_id =
+              msg_messages.sender_core_contact_id
           WHERE msg_message_media.msg_message_media_id = $1
         `,
         [messageMediaId]

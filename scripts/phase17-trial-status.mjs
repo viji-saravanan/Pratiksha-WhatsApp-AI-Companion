@@ -131,7 +131,12 @@ export async function collectPhase17TrialStatus(options = {}) {
       liveSendEnabled: runtime.liveSendEnabled === true,
       llmProvider: runtime.llmProvider || "unknown",
       llmModel: runtime.llmModel || "unknown",
-      livePollIntervalMs: Number(env.VIJI_LIVE_POLL_INTERVAL_MS || 1000)
+      livePollIntervalMs: Number(env.VIJI_LIVE_POLL_INTERVAL_MS || 1000),
+      mediaDrainEnabled: runtime.liveSync?.mediaDrainEnabled !== false,
+      mediaDrainLimitPerCycle:
+        runtime.liveSync?.mediaDrainLimitPerCycle ?? "unknown",
+      mediaAutoPromoteEnabled:
+        runtime.liveSync?.mediaAutoPromoteEnabled !== false
     },
     recommendations: buildRecommendations(gates, warningGates),
     failures

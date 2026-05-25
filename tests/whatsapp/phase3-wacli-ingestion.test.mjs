@@ -41,7 +41,7 @@ assert.equal(
   normalized.messages[0].externalMessageId,
   "wamid.redacted.vijayalakshmi.0001"
 );
-assert.equal(normalized.messages[0].senderDisplayName, "Primary Recipient");
+assert.equal(normalized.messages[0].senderDisplayName, "Vijayalakshmi Saravanan");
 assert.equal(normalized.messages[2].conversationType, "group");
 assert.equal(liveShapeNormalized.rejected.length, 0);
 assert.equal(liveShapeNormalized.messages[1].fromMe, true);
@@ -144,7 +144,7 @@ try {
     assert.equal(messages.rowCount, 1);
     assert.deepEqual(messages.rows[0], {
       externalMessageId: "wamid.redacted.vijayalakshmi.0001",
-      body: "Synthetic redacted recipient request for Phase 3 ingestion."
+      body: "Synthetic redacted Vijayalakshmi request for Phase 3 ingestion."
     });
 
     const adapterEvents = await pool.query(`
