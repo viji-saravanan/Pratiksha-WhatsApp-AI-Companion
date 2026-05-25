@@ -29,6 +29,8 @@ Pratiksha is a local-first WhatsApp companion designed for private, SSD-backed a
 - Supports dark mode, mobile views, upload controls, storage status, and health checks.
 - Keeps public defaults portable while allowing a private `.env` to place heavy runtime data on an external SSD.
 - Extracts safe local text snippets from registered text, PDF, and OCR-capable image resources for better file matching.
+- Stores voice notes as media first, then optionally transcribes them through a local multilingual speech-to-text command before automation can use them.
+- Uses local embeddings and pgvector to match natural file requests such as "final school scorecard" to registered resources without requiring exact filenames.
 
 ## How It Was Made
 
@@ -124,6 +126,28 @@ qwen3:4b-instruct-2507-q4_K_M
 
 The model is expected to run on the host at `http://host.docker.internal:11434`. You can change this in `.env` with `VIJI_OLLAMA_DOCKER_BASE_URL` and `VIJI_OLLAMA_MODEL`.
 
+Voice-note transcription is local-only and disabled until configured:
+
+```env
+VIJI_STT_ENABLED=false
+VIJI_STT_COMMAND=whisper-cli
+VIJI_STT_COMMAND_ARGS='["-m","{model}","-f","{audio}","-l","auto","-oj","-of","{output}"]'
+VIJI_STT_MODEL_PATH=/data/pratiksha/models/whisper/ggml-small.bin
+VIJI_STT_MODEL_NAME="whisper.cpp small multilingual"
+```
+
+The live worker converts audio with `ffmpeg`, writes transcript status and confidence to Postgres, and only lets audio-only messages enter automation after a high-confidence transcript exists. The selected default is a multilingual Whisper model with language auto-detection so English, Tamil, Hindi, and mixed-language voice notes can be evaluated without sending audio to a cloud service.
+
+Semantic file matching is local-only and enabled by default:
+
+```env
+VIJI_RESOURCE_SEMANTIC_ENABLED=true
+VIJI_RESOURCE_EMBEDDING_MODEL=mxbai-embed-large
+VIJI_RESOURCE_SEMANTIC_MIN_SCORE=0.72
+```
+
+The worker embeds registered resource metadata and extracted document chunks, stores those vectors in Postgres, and combines semantic score with exact filename, lexical, permission, and recency signals. Semantic retrieval only changes the proposal list; file sends still require WhatsApp-side confirmation of the exact registered file.
+
 ## Architecture
 
 ```mermaid
@@ -135,6 +159,8 @@ flowchart LR
   Worker --> LLM["Local LLM proxy"]
   LLM --> Ollama["Ollama on host"]
   API --> Files["File repository"]
+  Worker --> KB["Resource embeddings"]
+  KB --> PG
   Guard["Storage guard"] --> Files
 ```
 

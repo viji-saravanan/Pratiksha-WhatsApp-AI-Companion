@@ -27,6 +27,7 @@ try {
     "msg_conversations",
     "msg_messages",
     "msg_message_media",
+    "msg_message_media_transcripts",
     "msg_conversation_summaries",
     "msg_history_backfill_jobs",
     "msg_media_download_jobs",
@@ -38,6 +39,10 @@ try {
     "kb_knowledge_sources",
     "kb_documents",
     "kb_document_chunks",
+    "kb_embedding_models",
+    "kb_embeddings",
+    "kb_retrieval_runs",
+    "kb_retrieval_chunks",
     "res_file_assets",
     "ops_adapter_events",
     "ops_sync_cursors",
@@ -79,6 +84,7 @@ try {
     "source_ops_system_component_id",
     "parent_msg_conversation_id",
     "parent_msg_message_id",
+    "parent_msg_message_media_id",
     "parent_msg_conversation_id",
     "sender_core_contact_id",
     "reply_to_msg_message_id",
@@ -101,7 +107,11 @@ try {
     "storage_profile_ops_storage_profile_id",
     "source_kb_knowledge_source_id",
     "original_res_file_asset_id",
-    "parent_kb_document_id"
+    "parent_kb_document_id",
+    "target_kb_document_chunk_id",
+    "target_res_resource_id",
+    "model_kb_embedding_model_id",
+    "parent_kb_retrieval_run_id"
   ]);
 
   const tableStems = new Map([
@@ -111,6 +121,7 @@ try {
     ["msg_conversations", "msg_conversation_"],
     ["msg_messages", "msg_message_"],
     ["msg_message_media", "msg_message_media_"],
+    ["msg_message_media_transcripts", "msg_message_media_transcript_"],
     ["msg_conversation_summaries", "msg_conversation_summary_"],
     ["msg_history_backfill_jobs", "msg_history_backfill_job_"],
     ["msg_media_download_jobs", "msg_media_download_job_"],
@@ -122,6 +133,10 @@ try {
     ["kb_knowledge_sources", "kb_knowledge_source_"],
     ["kb_documents", "kb_document_"],
     ["kb_document_chunks", "kb_document_chunk_"],
+    ["kb_embedding_models", "kb_embedding_model_"],
+    ["kb_embeddings", "kb_embedding_"],
+    ["kb_retrieval_runs", "kb_retrieval_run_"],
+    ["kb_retrieval_chunks", "kb_retrieval_chunk_"],
     ["res_file_assets", "res_file_asset_"],
     ["ops_adapter_events", "ops_adapter_event_"],
     ["ops_sync_cursors", "ops_sync_cursor_"],

@@ -14,6 +14,8 @@ export interface FileResourceRecord {
   allowedContactIds: string[] | null;
   requiresRecipientConfirmation: boolean;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface FileAssetRecord {
@@ -118,7 +120,9 @@ function resourceReturningSql(): string {
     res_resources.res_resource_sensitivity AS "sensitivity",
     res_resources.res_resource_allowed_contact_ids AS "allowedContactIds",
     res_resources.res_resource_requires_recipient_confirmation AS "requiresRecipientConfirmation",
-    res_resources.res_resource_is_active AS "isActive"
+    res_resources.res_resource_is_active AS "isActive",
+    res_resources.res_resource_created_at AS "createdAt",
+    res_resources.res_resource_updated_at AS "updatedAt"
   `;
 }
 

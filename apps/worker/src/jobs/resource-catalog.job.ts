@@ -6,11 +6,13 @@ import {
   type DbExecutor,
   type ResourceProposalWithOptions
 } from "@viji/db";
+import type { EmbeddingClient } from "@viji/ai";
 import {
   formatResourceSuggestionText,
   rankResourceCandidates
 } from "@viji/resources";
-import { ensureAssistantReplyPrefix } from "@viji/shared";
+import { ensureAssistantReplyPrefix, type AppLogger } from "@viji/shared";
+import { findSemanticResourceMatches } from "./resource-semantic.job.js";
 
 export type CreateResourceSuggestionDraftResult =
   | {
@@ -31,6 +33,9 @@ export interface CreateResourceSuggestionDraftInput {
   modelName?: string;
   now?: Date;
   maxCandidates?: number;
+  env?: NodeJS.ProcessEnv;
+  embeddingClient?: EmbeddingClient;
+  logger?: AppLogger;
 }
 
 function suggestionPromptHash(parts: readonly string[]): string {
@@ -62,8 +67,17 @@ export async function createResourceSuggestionDraftForInboundMessage(
     contactId: message.senderContactId,
     limit: 200
   });
+  const semanticMatches = await findSemanticResourceMatches(db, {
+    queryText,
+    contactId: message.senderContactId,
+    agentRunId: run.agentRunId,
+    env: input.env,
+    embeddingClient: input.embeddingClient,
+    logger: input.logger
+  });
   const candidates = rankResourceCandidates(resources, queryText, {
-    limit: input.maxCandidates ?? 5
+    limit: input.maxCandidates ?? 5,
+    semanticMatches
   });
   const body = ensureAssistantReplyPrefix(formatResourceSuggestionText(candidates));
   const draft = await repositories.drafts.createDraft({

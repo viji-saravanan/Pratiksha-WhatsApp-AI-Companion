@@ -59,6 +59,57 @@ export interface KnowledgeDocumentChunkRecord {
   metadata: Record<string, unknown>;
 }
 
+export interface KnowledgeEmbeddingModelRecord {
+  embeddingModelId: string;
+  name: string;
+  dimensions: number;
+  runtime: "local";
+}
+
+export interface KnowledgeEmbeddingRecord {
+  embeddingId: string;
+  documentChunkId: string | null;
+  resourceId: string | null;
+  embeddingModelId: string;
+  dimensions: number;
+  contentHash: string;
+}
+
+export interface SemanticResourceMatchRecord {
+  resourceId: string;
+  registeredFileName: string;
+  title: string;
+  aliases: string[];
+  description: string | null;
+  contentSummary: string | null;
+  semanticScore: string;
+  documentChunkId: string | null;
+}
+
+export interface CreateRetrievalRunInput {
+  agentRunId: string;
+  embeddingModelId: string;
+  queryText: string;
+  topK: number;
+  latencyMs?: number | null;
+  chunks: Array<{
+    documentChunkId?: string | null;
+    resourceId?: string | null;
+    rank: number;
+    score: number;
+    includedInPrompt?: boolean;
+  }>;
+}
+
+export interface KnowledgeRetrievalRunRecord {
+  retrievalRunId: string;
+  agentRunId: string;
+  embeddingModelId: string;
+  queryText: string;
+  topK: number;
+  latencyMs: number | null;
+}
+
 export interface UpsertKnowledgeSourceInput {
   type: KnowledgeSourceType;
   name: string;
@@ -133,6 +184,46 @@ function chunkReturningSql(): string {
     kb_document_chunk_page_end AS "pageEnd",
     kb_document_chunk_metadata AS "metadata"
   `;
+}
+
+function embeddingModelReturningSql(): string {
+  return `
+    kb_embedding_model_id AS "embeddingModelId",
+    kb_embedding_model_name AS "name",
+    kb_embedding_model_dimensions AS "dimensions",
+    kb_embedding_model_runtime AS "runtime"
+  `;
+}
+
+function embeddingReturningSql(): string {
+  return `
+    kb_embedding_id AS "embeddingId",
+    target_kb_document_chunk_id AS "documentChunkId",
+    target_res_resource_id AS "resourceId",
+    model_kb_embedding_model_id AS "embeddingModelId",
+    kb_embedding_dimensions AS "dimensions",
+    kb_embedding_content_hash AS "contentHash"
+  `;
+}
+
+function retrievalRunReturningSql(): string {
+  return `
+    kb_retrieval_run_id AS "retrievalRunId",
+    source_agent_run_id AS "agentRunId",
+    model_kb_embedding_model_id AS "embeddingModelId",
+    kb_retrieval_run_query_text AS "queryText",
+    kb_retrieval_run_top_k AS "topK",
+    kb_retrieval_run_latency_ms AS "latencyMs"
+  `;
+}
+
+function pgVectorLiteral(vector: readonly number[]): string {
+  return `[${vector.map((value) => {
+    if (!Number.isFinite(value)) {
+      throw new Error("Embedding vector contains a non-finite value");
+    }
+    return Number(value).toString();
+  }).join(",")}]`;
 }
 
 export function createKnowledgeRepository(db: DbExecutor) {
@@ -318,6 +409,294 @@ export function createKnowledgeRepository(db: DbExecutor) {
       );
 
       return result.rows;
+    },
+
+    async upsertEmbeddingModel(input: {
+      name: string;
+      dimensions: number;
+      runtime?: "local";
+    }): Promise<KnowledgeEmbeddingModelRecord> {
+      return queryRequired<KnowledgeEmbeddingModelRecord>(
+        db,
+        `
+          INSERT INTO kb_embedding_models (
+            kb_embedding_model_name,
+            kb_embedding_model_dimensions,
+            kb_embedding_model_runtime
+          ) VALUES ($1, $2, $3)
+          ON CONFLICT (kb_embedding_model_name) DO UPDATE
+          SET
+            kb_embedding_model_dimensions =
+              EXCLUDED.kb_embedding_model_dimensions,
+            kb_embedding_model_runtime =
+              EXCLUDED.kb_embedding_model_runtime,
+            kb_embedding_model_updated_at = now()
+          RETURNING ${embeddingModelReturningSql()}
+        `,
+        [input.name, input.dimensions, input.runtime ?? "local"],
+        "Failed to upsert embedding model"
+      );
+    },
+
+    async findResourceEmbedding(input: {
+      resourceId: string;
+      embeddingModelId: string;
+    }): Promise<KnowledgeEmbeddingRecord | null> {
+      return queryOne<KnowledgeEmbeddingRecord>(
+        db,
+        `
+          SELECT ${embeddingReturningSql()}
+          FROM kb_embeddings
+          WHERE target_res_resource_id = $1
+            AND model_kb_embedding_model_id = $2
+        `,
+        [input.resourceId, input.embeddingModelId]
+      );
+    },
+
+    async findDocumentChunkEmbedding(input: {
+      documentChunkId: string;
+      embeddingModelId: string;
+    }): Promise<KnowledgeEmbeddingRecord | null> {
+      return queryOne<KnowledgeEmbeddingRecord>(
+        db,
+        `
+          SELECT ${embeddingReturningSql()}
+          FROM kb_embeddings
+          WHERE target_kb_document_chunk_id = $1
+            AND model_kb_embedding_model_id = $2
+        `,
+        [input.documentChunkId, input.embeddingModelId]
+      );
+    },
+
+    async upsertResourceEmbedding(input: {
+      resourceId: string;
+      embeddingModelId: string;
+      vector: number[];
+      contentHash: string;
+    }): Promise<KnowledgeEmbeddingRecord> {
+      return queryRequired<KnowledgeEmbeddingRecord>(
+        db,
+        `
+          INSERT INTO kb_embeddings (
+            target_res_resource_id,
+            model_kb_embedding_model_id,
+            kb_embedding_vector,
+            kb_embedding_dimensions,
+            kb_embedding_content_hash
+          ) VALUES ($1, $2, $3::vector, $4, $5)
+          ON CONFLICT (
+            target_res_resource_id,
+            model_kb_embedding_model_id
+          )
+          WHERE target_res_resource_id IS NOT NULL
+          DO UPDATE
+          SET
+            kb_embedding_vector = EXCLUDED.kb_embedding_vector,
+            kb_embedding_dimensions = EXCLUDED.kb_embedding_dimensions,
+            kb_embedding_content_hash = EXCLUDED.kb_embedding_content_hash,
+            kb_embedding_updated_at = now()
+          RETURNING ${embeddingReturningSql()}
+        `,
+        [
+          input.resourceId,
+          input.embeddingModelId,
+          pgVectorLiteral(input.vector),
+          input.vector.length,
+          input.contentHash
+        ],
+        "Failed to upsert resource embedding"
+      );
+    },
+
+    async upsertDocumentChunkEmbedding(input: {
+      documentChunkId: string;
+      embeddingModelId: string;
+      vector: number[];
+      contentHash: string;
+    }): Promise<KnowledgeEmbeddingRecord> {
+      return queryRequired<KnowledgeEmbeddingRecord>(
+        db,
+        `
+          INSERT INTO kb_embeddings (
+            target_kb_document_chunk_id,
+            model_kb_embedding_model_id,
+            kb_embedding_vector,
+            kb_embedding_dimensions,
+            kb_embedding_content_hash
+          ) VALUES ($1, $2, $3::vector, $4, $5)
+          ON CONFLICT (
+            target_kb_document_chunk_id,
+            model_kb_embedding_model_id
+          )
+          WHERE target_kb_document_chunk_id IS NOT NULL
+          DO UPDATE
+          SET
+            kb_embedding_vector = EXCLUDED.kb_embedding_vector,
+            kb_embedding_dimensions = EXCLUDED.kb_embedding_dimensions,
+            kb_embedding_content_hash = EXCLUDED.kb_embedding_content_hash,
+            kb_embedding_updated_at = now()
+          RETURNING ${embeddingReturningSql()}
+        `,
+        [
+          input.documentChunkId,
+          input.embeddingModelId,
+          pgVectorLiteral(input.vector),
+          input.vector.length,
+          input.contentHash
+        ],
+        "Failed to upsert document chunk embedding"
+      );
+    },
+
+    async searchSemanticResourceMatches(input: {
+      modelName: string;
+      vector: number[];
+      contactId?: string | null;
+      limit?: number;
+      minScore?: number;
+    }): Promise<SemanticResourceMatchRecord[]> {
+      const result = await db.query<SemanticResourceMatchRecord>(
+        `
+          WITH matching_embeddings AS (
+            SELECT
+              kb_embeddings.target_res_resource_id,
+              kb_embeddings.target_kb_document_chunk_id,
+              1 - (kb_embeddings.kb_embedding_vector <=> $2::vector)
+                AS semantic_score
+            FROM kb_embeddings
+            INNER JOIN kb_embedding_models
+              ON kb_embedding_models.kb_embedding_model_id =
+                kb_embeddings.model_kb_embedding_model_id
+            WHERE kb_embedding_models.kb_embedding_model_name = $1
+              AND kb_embeddings.kb_embedding_dimensions = $3
+          ),
+          resource_matches AS (
+            SELECT
+              COALESCE(
+                matching_embeddings.target_res_resource_id,
+                res_resources.res_resource_id
+              ) AS resource_id,
+              matching_embeddings.target_kb_document_chunk_id,
+              matching_embeddings.semantic_score
+            FROM matching_embeddings
+            LEFT JOIN kb_document_chunks
+              ON kb_document_chunks.kb_document_chunk_id =
+                matching_embeddings.target_kb_document_chunk_id
+            LEFT JOIN kb_documents
+              ON kb_documents.kb_document_id =
+                kb_document_chunks.parent_kb_document_id
+            LEFT JOIN res_resources
+              ON res_resources.backing_res_file_asset_id =
+                kb_documents.original_res_file_asset_id
+          ),
+          ranked_matches AS (
+            SELECT DISTINCT ON (resource_matches.resource_id)
+              resource_matches.resource_id,
+              resource_matches.target_kb_document_chunk_id,
+              resource_matches.semantic_score
+            FROM resource_matches
+            WHERE resource_matches.resource_id IS NOT NULL
+            ORDER BY
+              resource_matches.resource_id,
+              resource_matches.semantic_score DESC,
+              resource_matches.target_kb_document_chunk_id NULLS LAST
+          )
+          SELECT
+            res_resources.res_resource_id AS "resourceId",
+            res_resources.res_resource_registered_file_name
+              AS "registeredFileName",
+            res_resources.res_resource_title AS "title",
+            res_resources.res_resource_aliases AS "aliases",
+            res_resources.res_resource_description AS "description",
+            res_resources.res_resource_content_summary AS "contentSummary",
+            ranked_matches.semantic_score AS "semanticScore",
+            ranked_matches.target_kb_document_chunk_id AS "documentChunkId"
+          FROM ranked_matches
+          INNER JOIN res_resources
+            ON res_resources.res_resource_id = ranked_matches.resource_id
+          LEFT JOIN res_file_assets
+            ON res_file_assets.res_file_asset_id =
+              res_resources.backing_res_file_asset_id
+          WHERE res_resources.res_resource_is_active = true
+            AND res_resources.res_resource_type = 'file'
+            AND ranked_matches.semantic_score >= $5
+            AND (
+              res_resources.backing_res_file_asset_id IS NULL OR
+              res_file_assets.res_file_asset_storage_state = 'available'
+            )
+            AND (
+              res_resources.res_resource_allowed_contact_ids IS NULL OR
+              $4::uuid = ANY(res_resources.res_resource_allowed_contact_ids)
+            )
+          ORDER BY
+            ranked_matches.semantic_score DESC,
+            res_resources.res_resource_registered_file_name ASC
+          LIMIT $6
+        `,
+        [
+          input.modelName,
+          pgVectorLiteral(input.vector),
+          input.vector.length,
+          input.contactId ?? null,
+          input.minScore ?? 0.72,
+          input.limit ?? 5
+        ]
+      );
+
+      return result.rows;
+    },
+
+    async createRetrievalRun(
+      input: CreateRetrievalRunInput
+    ): Promise<KnowledgeRetrievalRunRecord> {
+      const run = await queryRequired<KnowledgeRetrievalRunRecord>(
+        db,
+        `
+          INSERT INTO kb_retrieval_runs (
+            source_agent_run_id,
+            model_kb_embedding_model_id,
+            kb_retrieval_run_query_text,
+            kb_retrieval_run_top_k,
+            kb_retrieval_run_latency_ms
+          ) VALUES ($1, $2, $3, $4, $5)
+          RETURNING ${retrievalRunReturningSql()}
+        `,
+        [
+          input.agentRunId,
+          input.embeddingModelId,
+          input.queryText,
+          input.topK,
+          input.latencyMs ?? null
+        ],
+        "Failed to create retrieval run"
+      );
+
+      for (const chunk of input.chunks) {
+        await db.query(
+          `
+            INSERT INTO kb_retrieval_chunks (
+              parent_kb_retrieval_run_id,
+              target_kb_document_chunk_id,
+              target_res_resource_id,
+              kb_retrieval_chunk_rank,
+              kb_retrieval_chunk_score,
+              kb_retrieval_chunk_included_in_prompt
+            ) VALUES ($1, $2, $3, $4, $5, $6)
+          `,
+          [
+            run.retrievalRunId,
+            chunk.documentChunkId ?? null,
+            chunk.resourceId ?? null,
+            chunk.rank,
+            chunk.score,
+            chunk.includedInPrompt ?? false
+          ]
+        );
+      }
+
+      return run;
     }
   };
 }

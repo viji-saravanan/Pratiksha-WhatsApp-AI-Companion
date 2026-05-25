@@ -1,3 +1,4 @@
+export * from "./jobs/audio-transcription.job.js";
 export * from "./jobs/draft-generation.job.js";
 export * from "./jobs/inbound-ingestion.job.js";
 export * from "./jobs/live-automation.job.js";
@@ -9,5 +10,6 @@ export * from "./jobs/outbox-dispatch.job.js";
 export * from "./jobs/outbox-queue.job.js";
 export * from "./jobs/reconnect-recovery.job.js";
 export * from "./jobs/resource-catalog.job.js";
+export * from "./jobs/resource-semantic.job.js";
 export * from "./jobs/resource-understanding.job.js";
 export * from "./jobs/wacli-outbound-dispatcher.js";

@@ -6,6 +6,7 @@ import {
   createRepositories,
   type DbExecutor,
   type MediaDownloadJobRecord,
+  type MessageMediaTranscriptStatus,
   type ResponsePolicyMode
 } from "@viji/db";
 import {
@@ -63,6 +64,13 @@ const VALID_MEDIA_JOB_STATES = new Set<MediaDownloadJobRecord["state"]>([
   "failed",
   "blocked",
   "skipped"
+]);
+const VALID_TRANSCRIPT_STATES = new Set<MessageMediaTranscriptStatus>([
+  "pending",
+  "transcribed",
+  "low_confidence",
+  "failed",
+  "unsupported"
 ]);
 
 function isResponsePolicyMode(value: unknown): value is ResponsePolicyMode {
@@ -287,6 +295,18 @@ function parseMediaJobState(value: unknown): MediaDownloadJobRecord["state"] | u
   throw badRequest("state must be queued, running, downloaded, failed, blocked, or skipped");
 }
 
+function parseTranscriptState(value: unknown): MessageMediaTranscriptStatus | undefined {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  if (typeof value === "string" && VALID_TRANSCRIPT_STATES.has(value as MessageMediaTranscriptStatus)) {
+    return value as MessageMediaTranscriptStatus;
+  }
+
+  throw badRequest("state must be pending, transcribed, low_confidence, failed, or unsupported");
+}
+
 function redactOutboxJob(job: {
   outboundJobId: string;
   conversationId: string;
@@ -383,7 +403,31 @@ function buildLiveRuntimeStatus(env: NodeJS.ProcessEnv | undefined): Record<stri
       3
     ),
     mediaAutoPromoteEnabled:
-      env?.VIJI_LIVE_MEDIA_AUTO_PROMOTE_ENABLED !== "false"
+      env?.VIJI_LIVE_MEDIA_AUTO_PROMOTE_ENABLED !== "false",
+    semanticResourceRetrievalEnabled:
+      env?.VIJI_RESOURCE_SEMANTIC_ENABLED !== "false",
+    semanticResourceEmbeddingModel:
+      env?.VIJI_RESOURCE_EMBEDDING_MODEL ??
+      env?.VIJI_OLLAMA_EMBEDDING_MODEL ??
+      "mxbai-embed-large",
+    semanticResourceMinScore: numberFromEnv(
+      env,
+      "VIJI_RESOURCE_SEMANTIC_MIN_SCORE",
+      0.72
+    ),
+    audioTranscriptionEnabled: env?.VIJI_STT_ENABLED === "true",
+    audioTranscriptionLimitPerCycle: numberFromEnv(
+      env,
+      "VIJI_LIVE_AUDIO_TRANSCRIPTION_LIMIT_PER_CYCLE",
+      2
+    ),
+    audioTranscriptionMinConfidence: numberFromEnv(
+      env,
+      "VIJI_STT_MIN_CONFIDENCE",
+      0.65
+    ),
+    audioTranscriptionModelName:
+      env?.VIJI_STT_MODEL_NAME ?? "whisper.cpp small multilingual"
   };
 }
 
@@ -424,7 +468,8 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
     blockedJobs,
     recentSyncRuns,
     activeBackfillJobs,
-    mediaDownloadJobs
+    mediaDownloadJobs,
+    transcriptCounts
   ] = await Promise.all([
     repositories.conversations.listConversations(50),
     repositories.policies.listPolicies(50),
@@ -432,7 +477,8 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
     repositories.outbox.listJobs({ state: "blocked", limit: 50 }),
     repositories.syncRuns.listRecentSyncRuns(10),
     repositories.backfillJobs.listBackfillJobs(50),
-    repositories.mediaJobs.listMediaDownloadJobs({ limit: 100 })
+    repositories.mediaJobs.listMediaDownloadJobs({ limit: 100 }),
+    repositories.messages.countMessageMediaTranscriptsByStatus()
   ]);
 
   const contextStates = conversations.reduce<Record<string, number>>((counts, item) => {
@@ -458,8 +504,13 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
       ).length,
       activeMediaDownloadJobs: mediaDownloadJobs.filter(
         (job) => job.state === "queued" || job.state === "running"
-      ).length
+      ).length,
+      pendingTranscripts: transcriptCounts.pending,
+      lowConfidenceTranscripts: transcriptCounts.low_confidence,
+      failedTranscripts: transcriptCounts.failed,
+      transcribedAudioMessages: transcriptCounts.transcribed
     },
+    transcriptCounts,
     contextStates
   };
 }
@@ -575,6 +626,18 @@ async function buildMetrics(options: ApiAppOptions): Promise<string> {
       help: "Whether live worker media queue draining is enabled.",
       type: "gauge",
       value: live?.mediaDrainEnabled === false ? 0 : 1
+    },
+    {
+      name: "viji_resource_semantic_retrieval_enabled",
+      help: "Whether semantic resource retrieval is enabled.",
+      type: "gauge",
+      value: live?.semanticResourceRetrievalEnabled === false ? 0 : 1
+    },
+    {
+      name: "viji_live_audio_transcription_enabled",
+      help: "Whether local voice-note transcription is enabled.",
+      type: "gauge",
+      value: live?.audioTranscriptionEnabled === true ? 1 : 0
     }
   ];
 
@@ -664,6 +727,18 @@ async function handleRoute(
       payload: {
         mediaJobs: await repositories.mediaJobs.listMediaDownloadJobs({
           state: parseMediaJobState(context.url.searchParams.get("state")),
+          limit: parseLimit(context.url, 50)
+        })
+      }
+    };
+  }
+
+  if (method === "GET" && path === "/media/transcripts") {
+    return {
+      statusCode: 200,
+      payload: {
+        transcripts: await repositories.messages.listMessageMediaTranscripts({
+          status: parseTranscriptState(context.url.searchParams.get("state")),
           limit: parseLimit(context.url, 50)
         })
       }
