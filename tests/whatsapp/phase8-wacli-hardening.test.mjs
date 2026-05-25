@@ -549,10 +549,9 @@ test("only wa-adapter-wacli owns wacli execution", async () => {
     await readSourceTree("apps/api/src"),
     await readSourceTree("apps/cli/src"),
     await readSourceTree("apps/worker/src"),
-    await readSourceTree("packages/policy/src")
+    await readSourceTree("packages/policy/src"),
+    await readSourceTree("packages/ai/src")
   ].join("\n");
-  const aiSource = await readSourceTree("packages/ai/src");
 
   assert.equal(/child_process|spawn\(/.test(nonAdapterSource), false);
-  assert.equal(/VIJI_WACLI|createWacli|runWacli|wacli-mark-read/.test(aiSource), false);
 });

@@ -29,7 +29,6 @@ const state = {
     sync: null,
     backfill: null,
     media: null,
-    transcripts: null,
     conversations: null,
     confirmations: null,
     outbox: null,
@@ -77,7 +76,6 @@ const iconPaths = {
   layers: '<path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
   link: '<path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 1 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 1 0 12 20.1l1.1-1.1"/>',
   lock: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
-  mic: '<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/><path d="M8 22h8"/>',
   plug: '<path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a6 6 0 0 1-12 0V8Z"/>',
   route: '<circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M12 19h1a5 5 0 0 0 5-5V8"/><path d="M6 16V8a3 3 0 0 1 3-3h6"/>',
   search: '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
@@ -302,7 +300,6 @@ async function loadAll() {
     sync: api("/sync/status?limit=10"),
     backfill: api("/backfill/status?limit=10"),
     media: api("/media/jobs?limit=25"),
-    transcripts: api("/media/transcripts?limit=25"),
     conversations: api("/conversations?limit=25"),
     confirmations: api("/confirmations?limit=25"),
     outbox: api("/outbox?limit=25"),
@@ -354,7 +351,6 @@ function getDashboardData() {
     syncRuns: toArray(state.data.sync?.syncRuns),
     backfillJobs: toArray(state.data.backfill?.backfillJobs),
     mediaJobs: toArray(state.data.media?.mediaJobs),
-    transcripts: toArray(state.data.transcripts?.transcripts),
     auditEvents: toArray(state.data.audit?.auditEvents),
     policies: toArray(state.data.policy?.policies),
     containerLogs: state.data.containerLogs?.containerLogs || null
@@ -1005,16 +1001,6 @@ function renderSync() {
       </tr>
     `
   );
-  const transcriptRows = data.transcripts.map(
-    (item) => `
-      <tr>
-        <td>${escapeHtml(item.fileName || item.externalMessageId || item.messageMediaId)}</td>
-        <td>${pill(item.status || "unknown")}</td>
-        <td>${escapeHtml(item.confidence == null ? "unknown" : `${Math.round(Number(item.confidence) * 100)}%`)}</td>
-        <td>${escapeHtml(item.text ? item.text.slice(0, 90) : "No transcript text")}</td>
-      </tr>
-    `
-  );
   const backfillRows = data.backfillJobs.map(
     (item) => `
       <tr>
@@ -1100,30 +1086,6 @@ function renderSync() {
             }
           </div>
         </section>
-        <section class="sync-card">
-          <div class="sync-card-header">
-            <div>
-              <h2>${iconLabel("mic", "Voice transcripts")}</h2>
-              <p class="muted">Local-only speech-to-text status.</p>
-            </div>
-            ${pill(`${data.transcripts.length}`, "info")}
-          </div>
-          <div class="status-list">
-            ${
-              data.transcripts.length === 0
-                ? renderEmpty("No voice transcripts yet.")
-                : data.transcripts.slice(0, 3).map((item) => `
-                    <div class="status-row">
-                      <div>
-                        <div class="row-title">${escapeHtml(item.fileName || item.externalMessageId || "Voice note")}</div>
-                        <div class="row-subtitle">${escapeHtml(item.confidence == null ? "confidence unknown" : `${Math.round(Number(item.confidence) * 100)}% confidence`)}</div>
-                      </div>
-                      ${pill(item.status || "unknown")}
-                    </div>
-                  `).join("")
-            }
-          </div>
-        </section>
       </div>
       <section class="panel">
         <div class="panel-title-row">
@@ -1134,7 +1096,6 @@ function renderSync() {
           <div>${table(["State", "Started", "Finished", "Messages"], syncRows)}</div>
           <div>${table(["State", "Chat", "Updated"], backfillRows)}</div>
           <div>${table(["File", "Type", "Size", "State"], mediaRows)}</div>
-          <div>${table(["Voice note", "State", "Confidence", "Transcript"], transcriptRows)}</div>
         </div>
       </section>
     </div>
@@ -1189,7 +1150,6 @@ function renderSettings() {
           <div class="status-row with-icon"><div class="status-icon">${icon("wifi")}</div><div><div class="row-title">Live sending</div><div class="row-subtitle">Whether real WhatsApp sends are enabled.</div></div>${pill(data.runtime.liveSendEnabled ? "enabled" : "disabled")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("sync")}</div><div><div class="row-title">Live sync cadence</div><div class="row-subtitle">Poll every ${escapeHtml(formatDurationMs(liveSync.pollIntervalMs))}; sync ${liveSync.syncBeforePollEnabled ? "before every poll" : `on startup and every ${formatDurationMs(liveSync.syncIntervalMs)}`}.</div></div>${pill(liveSync.syncSchedulerEnabled === false ? "sync off" : "scheduled", liveSync.syncBeforePollEnabled ? "warn" : "ok")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("image")}</div><div><div class="row-title">Media drain</div><div class="row-subtitle">Downloads up to ${escapeHtml(liveSync.mediaDrainLimitPerCycle ?? 3)} queued media item(s) per worker cycle; auto-promote ${liveSync.mediaAutoPromoteEnabled === false ? "off" : "on"}.</div></div>${pill(liveSync.mediaDrainEnabled === false ? "disabled" : "enabled", liveSync.mediaDrainEnabled === false ? "neutral" : "ok")}</div>
-          <div class="status-row with-icon"><div class="status-icon">${icon("mic")}</div><div><div class="row-title">Voice note transcription</div><div class="row-subtitle">Local STT ${liveSync.audioTranscriptionEnabled ? `runs up to ${escapeHtml(liveSync.audioTranscriptionLimitPerCycle ?? 2)} audio item(s) per cycle` : "is idle until a local model is configured"}.</div></div>${pill(liveSync.audioTranscriptionEnabled ? "enabled" : "disabled", liveSync.audioTranscriptionEnabled ? "ok" : "neutral")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("database")}</div><div><div class="row-title">Local AI model</div><div class="row-subtitle">${escapeHtml(data.runtime.llmModel || "unknown")}</div></div>${pill(data.runtime.llmProvider || "ollama", "info")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("folder")}</div><div><div class="row-title">Media folder</div><div class="row-subtitle path">${escapeHtml(data.runtime.wacliMediaRoot || "unknown")}</div></div>${pill("configured", "neutral")}</div>
           <div class="status-row with-icon"><div class="status-icon">${icon("hardDrive")}</div><div><div class="row-title">Resource folder</div><div class="row-subtitle path">${escapeHtml(data.runtime.resourceRoot || "unknown")}</div></div>${pill("SSD", "info")}</div>

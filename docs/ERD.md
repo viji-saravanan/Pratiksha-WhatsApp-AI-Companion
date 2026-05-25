@@ -33,7 +33,7 @@ Generated migrations must not create generic physical columns such as `id`, `nam
 | Prefix | Domain | Tables |
 | --- | --- | --- |
 | `core_` | Identity and connected accounts | `core_people`, `core_contacts`, `core_channel_accounts` |
-| `msg_` | Conversations, messages, summaries, media, transcripts, and backfill | `msg_conversations`, `msg_messages`, `msg_message_media`, `msg_message_media_transcripts`, `msg_conversation_summaries`, `msg_history_backfill_jobs`, `msg_media_download_jobs` |
+| `msg_` | Conversations, messages, summaries, media, and backfill | `msg_conversations`, `msg_messages`, `msg_message_media`, `msg_conversation_summaries`, `msg_history_backfill_jobs`, `msg_media_download_jobs` |
 | `agent_` | AI runs, drafts, outbox, send attempts | `agent_runs`, `agent_drafts`, `agent_outbound_jobs`, `agent_send_attempts` |
 | `kb_` | Resource-catalog search and document retrieval | `kb_knowledge_sources`, `kb_documents`, `kb_document_chunks`, `kb_embedding_models`, `kb_embeddings`, `kb_retrieval_runs`, `kb_retrieval_chunks` |
 | `res_` | Files and shareable resources | `res_file_assets`, `res_resources`, `res_resource_proposals`, `res_resource_proposal_options` |
@@ -51,7 +51,6 @@ erDiagram
     MSG_CONVERSATIONS ||--o{ MSG_CONVERSATION_SUMMARIES : summarized_by
     MSG_CONVERSATIONS ||--o{ MSG_HISTORY_BACKFILL_JOBS : backfilled_by
     MSG_MESSAGES ||--o{ MSG_MESSAGE_MEDIA : has
-    MSG_MESSAGE_MEDIA ||--o| MSG_MESSAGE_MEDIA_TRANSCRIPTS : transcribed_as
     MSG_MESSAGES ||--o{ MSG_MEDIA_DOWNLOAD_JOBS : downloads
     RES_FILE_ASSETS ||--o{ MSG_MESSAGE_MEDIA : backs
     MSG_MESSAGES ||--o{ AGENT_RUNS : triggers
@@ -196,30 +195,6 @@ Media attached to normalized WhatsApp messages. For allowlisted received media, 
 | `msg_message_media_size_bytes` | bigint nullable |  |
 | `msg_message_media_download_state` | text | `not_requested`, `queued`, `downloaded`, `failed`, `blocked` |
 | `msg_message_media_created_at` | timestamptz |  |
-
-### `msg_message_media_transcripts`
-
-Local speech-to-text results for downloaded WhatsApp audio. Transcript text is stored in Postgres because it is canonical searchable conversation state; audio bytes remain outside Postgres through `res_file_assets`.
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `msg_message_media_transcript_id` | uuid pk |  |
-| `parent_msg_message_media_id` | uuid fk | `msg_message_media.msg_message_media_id`; unique |
-| `msg_message_media_transcript_status` | text | `pending`, `transcribed`, `low_confidence`, `failed`, `unsupported` |
-| `msg_message_media_transcript_text` | text nullable | Local transcript text; null when missing or unsafe to use |
-| `msg_message_media_transcript_language` | text nullable | STT language code when available |
-| `msg_message_media_transcript_confidence` | numeric nullable | Normalized 0-1 confidence when available |
-| `msg_message_media_transcript_duration_ms` | integer nullable | Audio duration from STT output when available |
-| `msg_message_media_transcript_model_name` | text nullable | Local model/runtime label |
-| `msg_message_media_transcript_error_code` | text nullable | Redacted failure/degraded code |
-| `msg_message_media_transcript_metadata` | jsonb | Flexible local STT metadata, never the canonical transcript |
-| `msg_message_media_transcript_created_at` | timestamptz |  |
-| `msg_message_media_transcript_updated_at` | timestamptz |  |
-
-Indexes:
-
-- Unique index on `parent_msg_message_media_id`.
-- Index on `(msg_message_media_transcript_status, msg_message_media_transcript_updated_at desc)`.
 
 ### `msg_conversation_summaries`
 
