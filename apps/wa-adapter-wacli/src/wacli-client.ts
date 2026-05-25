@@ -90,7 +90,10 @@ export function createWacliClient(
 
     sync(options: WhatsAppSyncOptions = {}) {
       return runWacliJson(
-        config,
+        {
+          ...config,
+          timeout: config.syncTimeout
+        },
         ["sync", ...syncFlags(options)],
         "sync",
         parseWacliSync,

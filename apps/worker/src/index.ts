@@ -2,6 +2,7 @@ export * from "./jobs/draft-generation.job.js";
 export * from "./jobs/inbound-ingestion.job.js";
 export * from "./jobs/live-automation.job.js";
 export * from "./jobs/live-polling.job.js";
+export * from "./jobs/live-sync-scheduler.js";
 export * from "./jobs/media-sync.job.js";
 export * from "./jobs/outbound-dispatcher.interface.js";
 export * from "./jobs/outbox-dispatch.job.js";

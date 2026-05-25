@@ -1,8 +1,16 @@
 import assert from "node:assert/strict";
-import { mkdtemp, mkdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, rm, stat, truncate, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
+
+const coreBuild = spawnSync("corepack", ["pnpm", "--filter", "@viji/core", "build"], {
+  cwd: process.cwd(),
+  encoding: "utf8"
+});
+assert.equal(coreBuild.status, 0, coreBuild.stderr);
+
+const { getDirectoryUsageBytes } = await import("../../packages/core/dist/index.js");
 
 async function withTempDataRoot(testFn) {
   const root = await mkdtemp(join(tmpdir(), "viji-storage-"));
@@ -44,6 +52,9 @@ await withTempDataRoot(async (root) => {
 
 await withTempDataRoot(async (root) => {
   await writeFile(join(root, "small.txt"), "abc");
+  const sparseProfilePath = join(root, "docker.raw");
+  await writeFile(sparseProfilePath, "");
+  await truncate(sparseProfilePath, 1024 * 1024 * 1024);
   await mkdir(join(root, ".pnpm-store"));
   await writeFile(join(root, ".pnpm-store", "cache.bin"), Buffer.alloc(1024 * 1024));
   await mkdir(join(root, "dist"));
@@ -72,10 +83,29 @@ await withTempDataRoot(async (root) => {
   assert.equal(report.profileName, "custom-env");
   assert.equal(report.state, "healthy");
   assert.ok(
-    report.usedBytes < 1024 * 100,
-    "package cache and generated build output should be excluded from project usage"
+    report.usedBytes < 10 * 1024 * 1024,
+    "package cache, generated build output, and sparse-file apparent size should not inflate project usage"
   );
   assert.ok(report.freeBytes > 0);
+});
+
+await withTempDataRoot(async (root) => {
+  const sparsePath = join(root, "Docker.raw");
+  await writeFile(sparsePath, "");
+  await truncate(sparsePath, 1024 * 1024 * 1024);
+
+  const fileStat = await stat(sparsePath);
+  const allocatedBytes = fileStat.blocks * 512;
+  const usedBytes = await getDirectoryUsageBytes(root);
+
+  assert.ok(
+    usedBytes < fileStat.size,
+    "shared storage usage helper should count allocated blocks, not sparse apparent size"
+  );
+  assert.ok(
+    usedBytes < allocatedBytes + 1024 * 1024,
+    "shared storage usage helper should stay close to allocated sparse-file blocks"
+  );
 });
 
 await withTempDataRoot(async (root) => {
