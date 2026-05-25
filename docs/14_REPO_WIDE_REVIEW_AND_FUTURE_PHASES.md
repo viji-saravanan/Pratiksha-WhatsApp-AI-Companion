@@ -39,7 +39,7 @@ Current runtime baseline:
 - Storage quota accounting now uses allocated disk blocks so the Docker Desktop sparse disk image on the SSD does not falsely consume the project quota by apparent size.
 - Phase 20 is complete as a spike and boundary phase. `packages/whatsapp` now has an optional event-stream adapter contract; `docs/ADAPTER_SPIKE.md` compares current `wacli`, documented `wacli` follow/events behavior, direct `whatsmeow`, and Baileys-style bridge options. The production runtime still stays on `wacli` until a persistent adapter passes recovery, duplicate-prevention, media, and send-gate tests.
 - Phase 21 is complete. The live worker now drains queued allowlisted media during unattended Docker runtime, stores each download under a per-job SSD-backed media directory, cleans partial files after failures, auto-promotes successful downloads into contact-scoped resources, and exposes queue/drain status through API, CLI, dashboard, and metrics.
-- The remaining open review themes are Phase 22 through Phase 26: image/document understanding, voice transcription, semantic retrieval, multi-contact copy cleanup, and evaluation gates.
+- The remaining open review themes are Phase 23 through Phase 26: voice transcription, semantic retrieval, multi-contact copy cleanup, and evaluation gates.
 
 ## Future Phase Plan
 
@@ -136,6 +136,10 @@ Goal:
 
 Make Pratiksha understand saved images and documents well enough to answer questions and improve file retrieval.
 
+Status:
+
+- Complete in source. Phase 22 added typed KB extraction tables, a local extractor boundary, register/index extraction, PDF/text/image OCR extraction behavior, safe snippet sanitization, and focused tests for marksheet-like PDFs/images, corrupt PDFs, unsupported MIME types, path escapes, and API/CLI resource indexing regressions.
+
 Deliverables:
 
 - OCR/text extraction pipeline for images and PDFs.
@@ -153,10 +157,12 @@ Acceptance checks:
 Primary files:
 
 - `packages/resources/src/resource-indexer.ts`
+- `packages/resources/src/content-extractor.ts`
 - `packages/ai/src/prompt-builder.ts`
 - `packages/db/src/repositories/resources.repo.ts`
+- `packages/db/src/repositories/knowledge.repo.ts`
 - `migrations/`
-- New `packages/kb` or equivalent parser package if the docs are updated first.
+- `apps/worker/src/jobs/resource-understanding.job.ts`
 
 ### Phase 23: Voice Note Transcription
 

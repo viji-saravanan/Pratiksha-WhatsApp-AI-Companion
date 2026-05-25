@@ -4,7 +4,7 @@
 
 This ERD supports a local-first personal WhatsApp AI assistant that starts with policy-gated trusted-contact text replies, then adds a smart resource catalog with recipient-confirmed file sending, allowlisted chat history recovery, media sync, monitoring, auditability, and safe idle-state behavior.
 
-The database is Postgres with pgvector. Large files, models, WhatsApp stores, media, logs, and backups live under the configured Pratiksha data root. The default storage allocation is `large-200gb`.
+The database is Postgres with pgvector. Large files, models, WhatsApp stores, media, logs, and backups live under `<external-data-root>`. The default storage allocation is `large-200gb`.
 
 ## 2. Naming Policy
 
@@ -336,7 +336,7 @@ Indexes:
 | Field | Type | Notes |
 | --- | --- | --- |
 | `kb_knowledge_source_id` | uuid pk |  |
-| `kb_knowledge_source_type` | text | `local_folder`, `local_file`, `drive`, `url`, `manual` |
+| `kb_knowledge_source_type` | text | `local_folder`, `local_file`, `resource_file_asset`, `drive`, `url`, `manual` |
 | `kb_knowledge_source_name` | text |  |
 | `kb_knowledge_source_uri` | text | External-drive path or connector URI |
 | `kb_knowledge_source_sync_state` | text | `pending`, `syncing`, `indexed`, `failed`, `disabled` |
@@ -355,13 +355,19 @@ Indexes:
 | `kb_document_mime_type` | text |  |
 | `kb_document_content_hash` | text |  |
 | `kb_document_version_label` | text nullable |  |
-| `kb_document_indexed_state` | text | `pending`, `extracting`, `chunked`, `embedded`, `failed` |
+| `kb_document_indexed_state` | text | `pending`, `extracting`, `chunked`, `embedded`, `failed`, `unsupported` |
+| `kb_document_extraction_status` | text | `pending`, `extracted`, `unsupported`, `failed` |
+| `kb_document_extraction_error` | text nullable | Bounded error code such as `invalid_pdf_header` |
+| `kb_document_extractor_name` | text nullable | Local extractor identifier |
+| `kb_document_extractor_version` | text nullable | Extractor implementation version |
+| `kb_document_extractor_metadata` | jsonb | Flexible extractor metadata such as parser name and tool status |
 | `kb_document_created_at` | timestamptz |  |
 | `kb_document_updated_at` | timestamptz |  |
 
 Constraints:
 
 - Unique index on `(source_kb_knowledge_source_id, kb_document_content_hash)`.
+- Unique partial index on `original_res_file_asset_id` when present.
 
 ### `kb_document_chunks`
 
@@ -374,7 +380,7 @@ Constraints:
 | `kb_document_chunk_token_count` | integer nullable |  |
 | `kb_document_chunk_page_start` | integer nullable |  |
 | `kb_document_chunk_page_end` | integer nullable |  |
-| `kb_document_chunk_metadata` | jsonb | Section headings, tags |
+| `kb_document_chunk_metadata` | jsonb | Section headings, tags, page hints, and `untrustedExtractedContent` marker |
 | `kb_document_chunk_created_at` | timestamptz |  |
 
 ### `kb_embedding_models`

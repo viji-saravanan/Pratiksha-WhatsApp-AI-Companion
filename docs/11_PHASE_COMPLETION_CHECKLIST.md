@@ -4,16 +4,16 @@
 
 Numbered roadmap status:
 
-- Complete: 21 phases, Phase 0 through Phase 16 plus Phase 18 through Phase 21.
+- Complete: 22 phases, Phase 0 through Phase 16 plus Phase 18 through Phase 22.
 - In progress: 1 numbered phase, Phase 17.
-- Planned: 5 numbered phases, Phase 22 through Phase 26.
-- Remaining: Phase 17 production-contact trial follow-up plus Phase 22 through Phase 26.
+- Planned: 4 numbered phases, Phase 23 through Phase 26.
+- Remaining: Phase 17 production-contact trial follow-up plus Phase 23 through Phase 26.
 - Separate observability work block: complete.
 
 Practical remaining work count:
 
 - Phase 17 now has a fresh-message live reply observation through the allowlisted `Myself` contact. It still needs the production-contact follow-up with Vijayalakshmi and thermal/CPU observations over a longer window.
-- Phase 22 through Phase 26 are future implementation phases created from the repo-wide review in [14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md](14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md).
+- Phase 23 through Phase 26 are future implementation phases created from the repo-wide review in [14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md](14_REPO_WIDE_REVIEW_AND_FUTURE_PHASES.md).
 
 ## Completion Rule
 
@@ -63,7 +63,7 @@ Universal gate for every phase:
 | Phase 19 | Live loop optimization | Complete | Scheduled startup/interval/retry sync, hot-poll sync disabled by default, timing logs, API/CLI/dashboard visibility, and focused tests |
 | Phase 20 | Persistent WhatsApp adapter spike | Complete | Event-stream adapter contract, direct `wacli`/`whatsmeow`/Baileys comparison, local capability check, and rollback gate |
 | Phase 21 | Automatic received-media persistence | Complete | Live worker drains queued media, stores files under per-job media directories, cleans partials, auto-promotes resources, and surfaces queue/drain status |
-| Phase 22 | Image and document understanding | Planned | Not started; target is OCR/document parsing and safe snippet persistence |
+| Phase 22 | Image and document understanding | Complete | KB extraction tables, local extractor boundary, API/register extraction, OCR/PDF tool wiring, safe snippets, and focused tests |
 | Phase 23 | Voice note transcription | Planned | Not started; target is local audio transcription linked to message media |
 | Phase 24 | Semantic retrieval and resource matching | Planned | Not started; target is hybrid lexical plus pgvector retrieval |
 | Phase 25 | Multi-contact copy and authority cleanup | Planned | Not started; target is contact-derived runtime copy without changing WhatsApp-only authority |
@@ -108,11 +108,11 @@ Goal: automatically save allowlisted received media.
 
 Goal: understand images and documents locally.
 
-- [ ] Add OCR/parser design to ERD and TDD before implementation.
-- [ ] Persist extracted text/snippets in Postgres-linked records.
-- [ ] Store extractor metadata without turning JSONB into the canonical model.
-- [ ] Keep file blobs outside Postgres.
-- [ ] Test marksheet-like images/PDFs, corrupt files, unsupported MIME, and path escapes.
+- [x] Add OCR/parser design to ERD and TDD before implementation.
+- [x] Persist extracted text/snippets in Postgres-linked records.
+- [x] Store extractor metadata without turning JSONB into the canonical model.
+- [x] Keep file blobs outside Postgres.
+- [x] Test marksheet-like images/PDFs, corrupt files, unsupported MIME, and path escapes.
 
 ### Phase 23 Checklist
 
@@ -229,6 +229,19 @@ Goal: make future Codex work follow the repo rules quickly.
 Latest completed verification:
 
 ```bash
+node --test tests/resources/phase22-document-understanding.test.mjs tests/resources/phase12-resource-api-cli.test.mjs
+node --test tests/migrations/phase1-migrations.test.mjs
+corepack pnpm typecheck
+node --test tests/**/*.test.mjs
+docker compose --profile dashboard --profile app --profile live config --quiet
+docker compose build api live-worker
+```
+
+Result: Phase 22 focused extraction tests passed, API/CLI resource indexing regression passed, migration/schema checks passed, 118 Node tests passed, TypeScript passed, Docker Compose config passed, and API/live-worker Docker images rebuilt with OCR/PDF tools. Phase 22 added typed KB extraction records, local PDF/image/text extraction, safe prompt-snippet sanitization, resource summary updates through register/index paths, and Docker runtime packages for free/open-source OCR/PDF extraction.
+
+Previous completed verification:
+
+```bash
 node --test tests/whatsapp/phase21-media-daemon.test.mjs
 node --test tests/whatsapp/phase13-media-sync.test.mjs tests/api-cli/phase7-api-cli.test.mjs tests/observability/observability.test.mjs
 corepack pnpm typecheck
@@ -296,10 +309,10 @@ node --test tests/**/*.test.mjs
 corepack pnpm typecheck
 docker compose --profile dashboard config
 corepack pnpm trial:status -- --json
-corepack pnpm exec playwright screenshot --wait-for-timeout 3000 --full-page --browser chromium --viewport-size 1440,1100 http://127.0.0.1:8788 <downloads>/viji-dashboard-runtime.png
+corepack pnpm exec playwright screenshot --wait-for-timeout 3000 --full-page --browser chromium --viewport-size 1440,1100 http://127.0.0.1:8788 <operator-home>/Downloads/viji-dashboard-runtime.png
 node scripts/generate-project-skills.mjs
 corepack pnpm skills:validate
-<temporary SSD venv>/bin/python <codex-home>/skills/.system/skill-creator/scripts/quick_validate.py <codex-home>/skills/viji-helper-dev
+<temporary SSD venv>/bin/python <operator-home>/.codex/skills/.system/skill-creator/scripts/quick_validate.py <operator-home>/.codex/skills/viji-helper-dev
 ```
 
 Result: 82 Node tests passed, TypeScript passed, the dashboard Compose profile rendered successfully, the dashboard loaded API-backed data visually, the project skill pack validated, `$viji-helper-dev` validated through the official skill validator, and trial readiness reached API/Postgres/storage/AI but remained blocked because live auto-reply and live send are intentionally disabled.

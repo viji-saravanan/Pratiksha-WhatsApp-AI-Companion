@@ -27,7 +27,10 @@ FROM node:20-bookworm-slim AS runtime
 WORKDIR /app
 RUN corepack enable \
   && apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    poppler-utils \
+    tesseract-ocr \
   && rm -rf /var/lib/apt/lists/*
 
 COPY --from=wacli-build /out/wacli /usr/local/bin/wacli

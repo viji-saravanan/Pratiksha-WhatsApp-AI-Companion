@@ -14,7 +14,8 @@ RUN pnpm --filter @viji/api... build
 FROM node:20-alpine AS runtime
 
 WORKDIR /app
-RUN corepack enable
+RUN corepack enable \
+  && apk add --no-cache poppler-utils tesseract-ocr
 
 COPY package.json pnpm-workspace.yaml ./
 COPY --from=build /app/node_modules ./node_modules

@@ -13,7 +13,7 @@ import {
   scanResourceDirectory,
   type ResourceIndexScope
 } from "@viji/resources";
-import { denyResourceProposal } from "@viji/worker";
+import { denyResourceProposal, understandFileResource } from "@viji/worker";
 import {
   ERROR_CODES,
   getAssistantIdentity,
@@ -209,6 +209,21 @@ function optionalStringArrayField(
   );
 }
 
+function optionalBooleanField(
+  body: Record<string, unknown>,
+  field: string
+): boolean | undefined {
+  const value = body[field];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "boolean") {
+    throw badRequest(`${field} must be a boolean`);
+  }
+
+  return value;
+}
+
 function parseBodyLimit(body: Record<string, unknown>, defaultLimit: number): number {
   const value = body.limit;
   if (value === undefined) {
@@ -220,6 +235,32 @@ function parseBodyLimit(body: Record<string, unknown>, defaultLimit: number): nu
   }
 
   return value as number;
+}
+
+async function extractResourceContentIfEnabled(input: {
+  db: DbExecutor;
+  resourceId: string;
+  resourceRoot: string;
+  enabled: boolean;
+}): Promise<{
+  status: string;
+  chunkCount: number;
+  error: string | null;
+} | null> {
+  if (!input.enabled) {
+    return null;
+  }
+
+  const result = await understandFileResource(input.db, {
+    resourceId: input.resourceId,
+    resourceRoot: input.resourceRoot
+  });
+
+  return {
+    status: result.status,
+    chunkCount: result.chunkCount,
+    error: result.error
+  };
 }
 
 function parseResourceIndexScope(value: unknown): ResourceIndexScope | undefined {
@@ -719,6 +760,12 @@ async function handleRoute(
       description: optionalNullableStringField(body, "description")
     });
     const resource = await repositories.resources.registerFileResource(draft);
+    const extraction = await extractResourceContentIfEnabled({
+      db: options.db,
+      resourceId: resource.resourceId,
+      resourceRoot: runtimePaths.resourceRoot,
+      enabled: optionalBooleanField(body, "extractContent") ?? true
+    });
 
     await repositories.auditEvents.recordAuditEvent({
       type: "resource.registered",
@@ -734,7 +781,8 @@ async function handleRoute(
     return {
       statusCode: 201,
       payload: {
-        resource
+        resource,
+        extraction
       }
     };
   }
@@ -751,13 +799,29 @@ async function handleRoute(
     const resources = await Promise.all(
       drafts.map((draft) => repositories.resources.registerFileResource(draft))
     );
+    const extractContent = optionalBooleanField(body, "extractContent") ?? true;
+    const extractions = [];
+    if (extractContent) {
+      for (const resource of resources) {
+        extractions.push({
+          resourceId: resource.resourceId,
+          ...(await extractResourceContentIfEnabled({
+            db: options.db,
+            resourceId: resource.resourceId,
+            resourceRoot: runtimePaths.resourceRoot,
+            enabled: true
+          }))
+        });
+      }
+    }
 
     await repositories.auditEvents.recordAuditEvent({
       type: "resource.indexed",
       severity: "info",
       detail: {
         count: resources.length,
-        scope: scope ?? "all"
+        scope: scope ?? "all",
+        extracted: extractions.length
       }
     });
 
@@ -765,7 +829,8 @@ async function handleRoute(
       statusCode: 200,
       payload: {
         count: resources.length,
-        resources
+        resources,
+        extractions
       }
     };
   }

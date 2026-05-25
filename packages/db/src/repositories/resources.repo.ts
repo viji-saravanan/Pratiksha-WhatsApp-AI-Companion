@@ -29,6 +29,8 @@ export interface FileAssetRecord {
 export interface FileResourceForSendRecord extends FileResourceRecord {
   storageUri: string | null;
   mimeType: string | null;
+  checksumSha256: string | null;
+  sizeBytes: string | null;
 }
 
 export interface UpsertFileAssetInput {
@@ -307,7 +309,9 @@ export function createResourcesRepository(db: DbExecutor) {
           SELECT
             ${resourceReturningSql()},
             res_file_assets.res_file_asset_storage_uri AS "storageUri",
-            res_file_assets.res_file_asset_mime_type AS "mimeType"
+            res_file_assets.res_file_asset_mime_type AS "mimeType",
+            res_file_assets.res_file_asset_checksum_sha256 AS "checksumSha256",
+            res_file_assets.res_file_asset_size_bytes AS "sizeBytes"
           FROM res_resources
           LEFT JOIN res_file_assets
             ON res_file_assets.res_file_asset_id =
@@ -321,6 +325,25 @@ export function createResourcesRepository(db: DbExecutor) {
             )
         `,
         [resourceId]
+      );
+    },
+
+    async updateResourceContentSummary(input: {
+      resourceId: string;
+      contentSummary: string | null;
+    }): Promise<FileResourceRecord> {
+      return queryRequired<FileResourceRecord>(
+        db,
+        `
+          UPDATE res_resources
+          SET
+            res_resource_content_summary = $2,
+            res_resource_updated_at = now()
+          WHERE res_resource_id = $1
+          RETURNING ${resourceReturningSql()}
+        `,
+        [input.resourceId, input.contentSummary],
+        "Failed to update resource content summary"
       );
     },
 

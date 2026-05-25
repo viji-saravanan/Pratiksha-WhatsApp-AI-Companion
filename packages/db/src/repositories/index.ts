@@ -8,6 +8,7 @@ import { createContactsRepository } from "./contacts.repo.js";
 import { createConversationsRepository } from "./conversations.repo.js";
 import { createConversationSummariesRepository } from "./conversation-summaries.repo.js";
 import { createDraftsRepository } from "./drafts.repo.js";
+import { createKnowledgeRepository } from "./knowledge.repo.js";
 import { createMediaJobsRepository } from "./media-jobs.repo.js";
 import { createMessagesRepository } from "./messages.repo.js";
 import { createOutboxRepository } from "./outbox.repo.js";
@@ -28,6 +29,7 @@ export function createRepositories(db: DbExecutor) {
     conversations: createConversationsRepository(db),
     conversationSummaries: createConversationSummariesRepository(db),
     drafts: createDraftsRepository(db),
+    knowledge: createKnowledgeRepository(db),
     mediaJobs: createMediaJobsRepository(db),
     messages: createMessagesRepository(db),
     outbox: createOutboxRepository(db),
@@ -48,6 +50,7 @@ export * from "./contacts.repo.js";
 export * from "./conversations.repo.js";
 export * from "./conversation-summaries.repo.js";
 export * from "./drafts.repo.js";
+export * from "./knowledge.repo.js";
 export * from "./media-jobs.repo.js";
 export * from "./messages.repo.js";
 export * from "./outbox.repo.js";
