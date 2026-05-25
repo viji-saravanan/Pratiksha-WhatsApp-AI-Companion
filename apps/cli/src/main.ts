@@ -162,34 +162,6 @@ function humanMediaJobs(payload: Record<string, unknown>): string {
   ].join("\n");
 }
 
-function humanTranscripts(payload: Record<string, unknown>): string {
-  const transcripts = Array.isArray(payload.transcripts) ? payload.transcripts : [];
-  if (transcripts.length === 0) {
-    return "voice transcripts: 0";
-  }
-
-  return [
-    `voice transcripts: ${transcripts.length}`,
-    ...transcripts.map((transcript, index) => {
-      const item = transcript as {
-        status?: string;
-        fileName?: string;
-        externalMessageId?: string;
-        confidence?: string | number | null;
-        text?: string | null;
-      };
-      const confidence =
-        item.confidence === null || item.confidence === undefined
-          ? "unknown confidence"
-          : `${Math.round(Number(item.confidence) * 100)}% confidence`;
-      const preview = item.text ? ` - ${item.text.slice(0, 80)}` : "";
-      return `${index + 1}. ${item.status ?? "unknown"} - ${
-        item.fileName ?? item.externalMessageId ?? "voice note"
-      } (${confidence})${preview}`;
-    })
-  ].join("\n");
-}
-
 async function writePayload(
   output: CliOutput,
   args: string[],
@@ -225,7 +197,6 @@ export async function runCli(
           "  viji sync status [--json]",
           "  viji backfill status [--json]",
           "  viji media status [--json]",
-          "  viji media transcripts [--json]",
           "  viji drafts [--json]",
           "  viji confirmations [--json]",
           "  viji resources list [--json]",
@@ -300,14 +271,6 @@ export async function runCli(
     if (command === "media" && subcommand === "status") {
       const result = await apiClient.get<Record<string, unknown>>("/media/jobs");
       await writePayload(output, argv, result, humanMediaJobs(result));
-      return 0;
-    }
-
-    if (command === "media" && subcommand === "transcripts") {
-      const result = await apiClient.get<Record<string, unknown>>(
-        "/media/transcripts"
-      );
-      await writePayload(output, argv, result, humanTranscripts(result));
       return 0;
     }
 

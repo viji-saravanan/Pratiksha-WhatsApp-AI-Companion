@@ -8,9 +8,7 @@ import { createWacliClient } from "../apps/wa-adapter-wacli/dist/index.js";
 import {
   createLiveSyncScheduler,
   createWacliOutboundDispatcher,
-  drainAudioTranscriptionQueue,
   drainMediaDownloadQueue,
-  getAudioTranscriptionDrainConfigFromEnv,
   getMediaDrainConfigFromEnv,
   getLiveSyncSchedulerConfigFromEnv,
   runLiveAutomationCycle
@@ -42,15 +40,12 @@ const syncScheduler = createLiveSyncScheduler(
   getLiveSyncSchedulerConfigFromEnv(process.env)
 );
 const mediaDrainConfig = getMediaDrainConfigFromEnv(process.env);
-const audioTranscriptionConfig =
-  getAudioTranscriptionDrainConfigFromEnv(process.env);
 
 logger.info("live_worker.started", {
   channelAccountId: "[redacted-id]",
   pollIntervalMs,
   syncScheduler: syncScheduler.snapshot(),
   mediaDrain: mediaDrainConfig,
-  audioTranscription: audioTranscriptionConfig,
   autoReplyEnabled: process.env.VIJI_AUTO_REPLY_ENABLED === "true",
   liveSendEnabled: process.env.VIJI_WACLI_LIVE_SEND_ENABLED === "true"
 });
@@ -62,8 +57,6 @@ try {
     let forceSyncEveryCycle = false;
     let mediaDrain = null;
     let mediaDrainDurationMs = null;
-    let audioTranscription = null;
-    let audioTranscriptionDurationMs = null;
     try {
       const storage = resolveLiveWorkerStorageGate(process.env);
       if (!storage.available) {
@@ -124,34 +117,11 @@ try {
           });
         }
       }
-      if (audioTranscriptionConfig.enabled) {
-        const audioTranscriptionStartedAt = Date.now();
-        try {
-          audioTranscription = await drainAudioTranscriptionQueue(pool, {
-            env: process.env,
-            limitPerCycle: audioTranscriptionConfig.limitPerCycle
-          });
-          audioTranscriptionDurationMs = Date.now() - audioTranscriptionStartedAt;
-          if (audioTranscription.attempted > 0) {
-            logger.info("live_worker.audio_transcription", {
-              ...audioTranscription,
-              durationMs: audioTranscriptionDurationMs
-            });
-          }
-        } catch (error) {
-          audioTranscriptionDurationMs = Date.now() - audioTranscriptionStartedAt;
-          logger.error("live_worker.audio_transcription_failed", error, {
-            durationMs: audioTranscriptionDurationMs
-          });
-        }
-      }
       logger.info("live_worker.cycle_timing", {
         cycleDurationMs: result.cycleDurationMs,
         syncDurationMs: result.syncDurationMs,
         mediaDrainDurationMs,
         mediaDrain,
-        audioTranscriptionDurationMs,
-        audioTranscription,
         syncStatus: result.syncStatus,
         syncReason: result.syncReason,
         effectivePollIntervalMs: Date.now() - startedAt,
