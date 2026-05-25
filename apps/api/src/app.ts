@@ -334,7 +334,15 @@ function buildLiveRuntimeStatus(env: NodeJS.ProcessEnv | undefined): Record<stri
     syncIntervalMs: numberFromEnv(env, "VIJI_LIVE_SYNC_INTERVAL_MS", 60_000),
     syncRetryMinMs: numberFromEnv(env, "VIJI_LIVE_SYNC_RETRY_MIN_MS", 15_000),
     syncRetryMaxMs: numberFromEnv(env, "VIJI_LIVE_SYNC_RETRY_MAX_MS", 300_000),
-    syncIdleExit: env?.VIJI_LIVE_SYNC_IDLE_EXIT ?? "12s"
+    syncIdleExit: env?.VIJI_LIVE_SYNC_IDLE_EXIT ?? "12s",
+    mediaDrainEnabled: env?.VIJI_LIVE_MEDIA_DRAIN_ENABLED !== "false",
+    mediaDrainLimitPerCycle: numberFromEnv(
+      env,
+      "VIJI_LIVE_MEDIA_DRAIN_LIMIT_PER_CYCLE",
+      3
+    ),
+    mediaAutoPromoteEnabled:
+      env?.VIJI_LIVE_MEDIA_AUTO_PROMOTE_ENABLED !== "false"
   };
 }
 
@@ -359,7 +367,8 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
         pendingConfirmations: 0,
         blockedJobs: 0,
         recentSyncRuns: 0,
-        activeBackfillJobs: 0
+        activeBackfillJobs: 0,
+        activeMediaDownloadJobs: 0
       },
       contextStates: {},
       degraded: true,
@@ -373,14 +382,16 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
     pendingConfirmations,
     blockedJobs,
     recentSyncRuns,
-    activeBackfillJobs
+    activeBackfillJobs,
+    mediaDownloadJobs
   ] = await Promise.all([
     repositories.conversations.listConversations(50),
     repositories.policies.listPolicies(50),
     repositories.drafts.listDrafts({ policyState: "confirm_resource", limit: 50 }),
     repositories.outbox.listJobs({ state: "blocked", limit: 50 }),
     repositories.syncRuns.listRecentSyncRuns(10),
-    repositories.backfillJobs.listBackfillJobs(50)
+    repositories.backfillJobs.listBackfillJobs(50),
+    repositories.mediaJobs.listMediaDownloadJobs({ limit: 100 })
   ]);
 
   const contextStates = conversations.reduce<Record<string, number>>((counts, item) => {
@@ -403,6 +414,9 @@ async function buildStatus(options: ApiAppOptions): Promise<Record<string, unkno
       recentSyncRuns: recentSyncRuns.length,
       activeBackfillJobs: activeBackfillJobs.filter(
         (job) => job.state === "queued" || job.state === "running" || job.state === "paused"
+      ).length,
+      activeMediaDownloadJobs: mediaDownloadJobs.filter(
+        (job) => job.state === "queued" || job.state === "running"
       ).length
     },
     contextStates
@@ -486,6 +500,12 @@ async function buildMetrics(options: ApiAppOptions): Promise<string> {
       value: numberField(counts ?? {}, "activeBackfillJobs")
     },
     {
+      name: "viji_active_media_download_jobs_total",
+      help: "Count of queued or running media download jobs.",
+      type: "gauge",
+      value: numberField(counts ?? {}, "activeMediaDownloadJobs")
+    },
+    {
       name: "viji_live_poll_interval_ms",
       help: "Configured target live worker poll interval in milliseconds.",
       type: "gauge",
@@ -508,6 +528,12 @@ async function buildMetrics(options: ApiAppOptions): Promise<string> {
       help: "Whether every live poll cycle forces a pre-poll adapter sync.",
       type: "gauge",
       value: live?.syncBeforePollEnabled === true ? 1 : 0
+    },
+    {
+      name: "viji_live_media_drain_enabled",
+      help: "Whether live worker media queue draining is enabled.",
+      type: "gauge",
+      value: live?.mediaDrainEnabled === false ? 0 : 1
     }
   ];
 

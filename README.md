@@ -82,6 +82,15 @@ corepack pnpm stack:dashboard:up
 
 Use `.env` to choose the host data directory, resource folder, API token, Postgres password, and Ollama model. The default compose file stores runtime data under `./.pratiksha-data` and shareable files under `./viji-files`; both are ignored by git.
 
+## Docker Storage And SSDs
+
+Pratiksha has two separate storage layers:
+
+- Project runtime data: controlled by `.env` through `PRATIKSHA_HOST_DATA_ROOT` and `PRATIKSHA_HOST_RESOURCE_ROOT`.
+- Docker Desktop image and VM storage: controlled globally by Docker Desktop settings.
+
+For a normal clone, Pratiksha does not require a specific external drive. To keep this project on an SSD, point the two host paths in your local `.env` at that drive. If Docker Desktop's own disk image is also moved to an SSD, Docker images and volumes for other Docker projects may use that same Docker Desktop location too. Those other projects do not inherently need the Pratiksha SSD unless their own Compose files or Docker Desktop's global data root point there.
+
 ## Local AI
 
 Pratiksha talks to Ollama through the `llm-proxy` service. The default model target is:

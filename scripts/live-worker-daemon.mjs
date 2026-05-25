@@ -8,6 +8,8 @@ import { createWacliClient } from "../apps/wa-adapter-wacli/dist/index.js";
 import {
   createLiveSyncScheduler,
   createWacliOutboundDispatcher,
+  drainMediaDownloadQueue,
+  getMediaDrainConfigFromEnv,
   getLiveSyncSchedulerConfigFromEnv,
   runLiveAutomationCycle
 } from "../apps/worker/dist/index.js";
@@ -37,11 +39,13 @@ const llmClient = createLlmClientFromEnv();
 const syncScheduler = createLiveSyncScheduler(
   getLiveSyncSchedulerConfigFromEnv(process.env)
 );
+const mediaDrainConfig = getMediaDrainConfigFromEnv(process.env);
 
 logger.info("live_worker.started", {
   channelAccountId: "[redacted-id]",
   pollIntervalMs,
   syncScheduler: syncScheduler.snapshot(),
+  mediaDrain: mediaDrainConfig,
   autoReplyEnabled: process.env.VIJI_AUTO_REPLY_ENABLED === "true",
   liveSendEnabled: process.env.VIJI_WACLI_LIVE_SEND_ENABLED === "true"
 });
@@ -51,6 +55,8 @@ try {
     const startedAt = Date.now();
     let shouldSync = false;
     let forceSyncEveryCycle = false;
+    let mediaDrain = null;
+    let mediaDrainDurationMs = null;
     try {
       const storage = resolveLiveWorkerStorageGate(process.env);
       if (!storage.available) {
@@ -88,9 +94,34 @@ try {
       if (shouldSync && !forceSyncEveryCycle) {
         syncScheduler.record(result.syncStatus);
       }
+      if (mediaDrainConfig.enabled) {
+        const mediaDrainStartedAt = Date.now();
+        try {
+          mediaDrain = await drainMediaDownloadQueue(pool, {
+            adapter,
+            env: process.env,
+            limitPerCycle: mediaDrainConfig.limitPerCycle,
+            autoPromote: mediaDrainConfig.autoPromote
+          });
+          mediaDrainDurationMs = Date.now() - mediaDrainStartedAt;
+          if (mediaDrain.attempted > 0) {
+            logger.info("live_worker.media_drain", {
+              ...mediaDrain,
+              durationMs: mediaDrainDurationMs
+            });
+          }
+        } catch (error) {
+          mediaDrainDurationMs = Date.now() - mediaDrainStartedAt;
+          logger.error("live_worker.media_drain_failed", error, {
+            durationMs: mediaDrainDurationMs
+          });
+        }
+      }
       logger.info("live_worker.cycle_timing", {
         cycleDurationMs: result.cycleDurationMs,
         syncDurationMs: result.syncDurationMs,
+        mediaDrainDurationMs,
+        mediaDrain,
         syncStatus: result.syncStatus,
         syncReason: result.syncReason,
         effectivePollIntervalMs: Date.now() - startedAt,

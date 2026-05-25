@@ -72,7 +72,7 @@ test("Phase 13 queues, downloads, and promotes allowlisted received media", asyn
   assert.deepEqual(normalized.messages[0].media, {
     externalMediaId: "wamid.redacted.vijayalakshmi.media.1001",
     mimeType: "image/jpeg",
-    fileName: "recipient_passport_photo.jpg",
+    fileName: "viji_passport_photo.jpg",
     sizeBytes: 21
   });
 
