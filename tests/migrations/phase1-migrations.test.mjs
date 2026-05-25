@@ -9,11 +9,13 @@ try {
   runProjectScript("scripts/run-migrations.mjs");
   runProjectScript("scripts/seed-dev-data.mjs", {
     VIJI_TEST_ALLOWLIST_MYSELF_ENABLED: "false",
+    VIJI_ALLOWLIST_VIJI_DISPLAY_NAME: "Vijayalakshmi Saravanan",
     VIJI_ALLOWLIST_VIJI_PHONE_E164: "",
     VIJI_ALLOWLIST_VIJI_WA_JID: ""
   });
   runProjectScript("scripts/seed-dev-data.mjs", {
     VIJI_TEST_ALLOWLIST_MYSELF_ENABLED: "false",
+    VIJI_ALLOWLIST_VIJI_DISPLAY_NAME: "Vijayalakshmi Saravanan",
     VIJI_ALLOWLIST_VIJI_PHONE_E164: "",
     VIJI_ALLOWLIST_VIJI_WA_JID: ""
   });
@@ -33,6 +35,9 @@ try {
     "agent_outbound_jobs",
     "agent_send_attempts",
     "policy_response_policies",
+    "kb_knowledge_sources",
+    "kb_documents",
+    "kb_document_chunks",
     "res_file_assets",
     "ops_adapter_events",
     "ops_sync_cursors",
@@ -93,7 +98,10 @@ try {
     "actor_core_person_id",
     "scope_core_contact_id",
     "scope_msg_conversation_id",
-    "storage_profile_ops_storage_profile_id"
+    "storage_profile_ops_storage_profile_id",
+    "source_kb_knowledge_source_id",
+    "original_res_file_asset_id",
+    "parent_kb_document_id"
   ]);
 
   const tableStems = new Map([
@@ -111,6 +119,9 @@ try {
     ["agent_outbound_jobs", "agent_outbound_job_"],
     ["agent_send_attempts", "agent_send_attempt_"],
     ["policy_response_policies", "policy_response_policy_"],
+    ["kb_knowledge_sources", "kb_knowledge_source_"],
+    ["kb_documents", "kb_document_"],
+    ["kb_document_chunks", "kb_document_chunk_"],
     ["res_file_assets", "res_file_asset_"],
     ["ops_adapter_events", "ops_adapter_event_"],
     ["ops_sync_cursors", "ops_sync_cursor_"],
@@ -152,12 +163,12 @@ try {
     FROM core_contacts
     WHERE core_contact_id = '00000000-0000-4000-8000-000000000002';
   `);
-  assert.equal(seedRow, "Primary Recipient\tt\tt\tt\ttrusted");
+  assert.equal(seedRow, "Vijayalakshmi Saravanan\tt\tt\tt\ttrusted");
 
   const seedCount = psql(`
     SELECT count(*)
     FROM core_contacts
-    WHERE core_contact_display_name = 'Primary Recipient';
+    WHERE core_contact_display_name = 'Vijayalakshmi Saravanan';
   `);
   assert.equal(seedCount, "1");
 
@@ -170,6 +181,7 @@ try {
 
   runProjectScript("scripts/seed-dev-data.mjs", {
     VIJI_TEST_ALLOWLIST_MYSELF_ENABLED: "false",
+    VIJI_ALLOWLIST_VIJI_DISPLAY_NAME: "Vijayalakshmi Saravanan",
     VIJI_ALLOWLIST_VIJI_PHONE_E164: "+10000000001",
     VIJI_ALLOWLIST_VIJI_WA_JID: "10000000001@s.whatsapp.net"
   });
@@ -186,7 +198,7 @@ try {
   `);
   assert.equal(
     vijiAddressSeedRow,
-    "Primary Recipient\t+10000000001\t10000000001@s.whatsapp.net\tt\ttrusted"
+    "Vijayalakshmi Saravanan\t+10000000001\t10000000001@s.whatsapp.net\tt\ttrusted"
   );
 
   runProjectScript("scripts/seed-dev-data.mjs", {
@@ -240,7 +252,7 @@ try {
       '00000000-0000-4000-8000-000000000002',
       'synthetic-chat',
       'dm',
-      'Synthetic Primary Recipient Chat',
+      'Synthetic Vijayalakshmi Chat',
       'active',
       'fresh'
     );

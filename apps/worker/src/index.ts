@@ -9,4 +9,5 @@ export * from "./jobs/outbox-dispatch.job.js";
 export * from "./jobs/outbox-queue.job.js";
 export * from "./jobs/reconnect-recovery.job.js";
 export * from "./jobs/resource-catalog.job.js";
+export * from "./jobs/resource-understanding.job.js";
 export * from "./jobs/wacli-outbound-dispatcher.js";

@@ -45,7 +45,7 @@ For the repo-wide review that added the next implementation phases, see [14_REPO
 | Phase 19 | Complete | Scheduled startup/interval/retry sync, sync-specific timeout, hot-poll sync disabled by default, backoff, timing logs, API/CLI/dashboard visibility |
 | Phase 20 | Complete | Persistent WhatsApp adapter spike, event-stream contract, option comparison, and rollback gate |
 | Phase 21 | Complete | Automatic received-media persistence in unattended Docker runtime |
-| Phase 22 | Planned | Image and document understanding for OCR, parsing, and safer retrieval |
+| Phase 22 | Complete | Image and document understanding for OCR, parsing, and safer retrieval |
 | Phase 23 | Planned | Local voice note transcription and transcript persistence |
 | Phase 24 | Planned | Hybrid lexical plus semantic resource retrieval with pgvector |
 | Phase 25 | Planned | Multi-contact runtime copy and authority cleanup |
@@ -61,7 +61,7 @@ Deliverables:
 
 - Active source workspace at `<external-data-root>/workspace/viji-helper`.
 - Runtime data root at `<external-data-root>`.
-- Sentinel file at `<external-data-root>/.pratiksha-root`.
+- Sentinel file at `<external-data-root>/.viji-helper-root`.
 - Idempotent SSD bootstrap command.
 - Monorepo scaffold with `pnpm`, TypeScript, config examples, and package boundaries.
 - Storage guard package and CLI checker.
@@ -1109,6 +1109,11 @@ Deliverables:
 - Parser support for DOCX, spreadsheets, and slides where practical.
 - Extractor metadata persisted in Postgres-linked records.
 - Local-only summarization path for parsed content.
+- `kb_knowledge_sources`, `kb_documents`, and `kb_document_chunks` migration.
+- `packages/resources` extractor boundary with text, PDF, image OCR, corruption, unsupported MIME, and path-escape behavior.
+- `apps/worker` resource-understanding job that persists chunks and updates safe resource summaries.
+- Resource register/index API paths trigger extraction by default and return redacted extraction status summaries.
+- API/live-worker Docker images include free/open-source `tesseract-ocr` and `poppler-utils` for OCR/PDF extraction.
 
 Acceptance checks:
 
@@ -1126,6 +1131,23 @@ Review focus:
 Exit criteria:
 
 - Pratiksha can use image/document content to clarify file requests and answer safe questions.
+
+Implementation notes:
+
+- Complete in source. Extraction records are typed Postgres rows linked to `res_file_assets`; flexible parser details stay in JSONB metadata.
+- Text-like files use the built-in parser. PDFs use `pdftotext` when available and a bounded literal-text fallback for simple PDFs. Images use local `tesseract` OCR when available.
+- Unsupported formats are persisted as `unsupported`; corrupt PDFs are persisted as `failed`; neither path invents content.
+- Extracted snippets are sanitized for local paths, secrets, and instruction-injection language before becoming chunks or resource summaries.
+
+Verification snapshot:
+
+- `node --test tests/resources/phase22-document-understanding.test.mjs`
+- `node --test tests/resources/phase22-document-understanding.test.mjs tests/resources/phase12-resource-api-cli.test.mjs`
+- `node --test tests/migrations/phase1-migrations.test.mjs`
+- `corepack pnpm typecheck`
+- `node --test tests/**/*.test.mjs`
+- `docker compose --profile dashboard --profile app --profile live config --quiet`
+- `docker compose build api live-worker`
 
 ## Phase 23: Voice Note Transcription
 
