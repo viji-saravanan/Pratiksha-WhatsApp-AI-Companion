@@ -242,4 +242,4 @@ These files and directories should stay local and are ignored by git:
 
 ## Contributing
 
-Issues and PRs are welcome. For changes touching WhatsApp live automation, file-send policy, storage behavior, or local model execution, open a PR with the checks you ran and call out any live-account behavior explicitly.
+Issues and PRs are welcome. For changes touching WhatsApp live automation, file-send policy, storage behavior, or local model execution, open a PR with the checks you ran and call out any live-account behavior explicitly. This repo only deals with a half-complete framework of the supposed app. We gladly welcome creativity
